@@ -1,0 +1,24 @@
+# Secrets — never commit
+.env
+.credentials.json
+*.key
+*.pem
+
+# Local Claude Code settings (per-machine permissions, not project source)
+.claude/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Node
+node_modules/
+dist/
+
+# OS
+.DS_Store
+
+# Logs
+*.log
