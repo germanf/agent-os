@@ -5,6 +5,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
 from dashboard.config import FRONTEND_DIST
+from dashboard.hermes_adapter import get_version as hermes_version
 from dashboard.ponytail import get_metrics, get_status
 from dashboard.rate_limit import limiter
 
@@ -40,6 +41,7 @@ async def diagnostics(request: Request):
         "db_exists": db_exists,
         "vault_exists": vault_exists,
         "ponytail": get_status(),
+        "hermes_version": hermes_version(),
         "python_version": sys.version.split()[0],
         "fastapi_installed": True,
         "uvicorn_installed": True,
