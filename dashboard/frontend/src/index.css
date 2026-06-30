@@ -1,0 +1,413 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #0d1117;
+  --color-surface: #161b22;
+  --color-surface2: #1c2128;
+  --color-border: #30363d;
+  --color-text: #c9d1d9;
+  --color-text-muted: #8b949e;
+  --color-accent: #7C3AED;
+  --color-accent-hover: #6D28D9;
+  --color-success: #3fb950;
+  --color-warning: #d29922;
+  --color-danger: #f85149;
+  --radius-card: 8px;
+  --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+}
+
+@layer base {
+  html, body, #root {
+    height: 100%;
+  }
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    display: flex;
+    flex-direction: column;
+  }
+  #root {
+    display: flex;
+    flex-direction: column;
+  }
+  label {
+    display: block;
+    font-size: 12px;
+    color: var(--color-text-muted);
+    margin-bottom: 4px;
+  }
+  hr {
+    border: none;
+    border-top: 1px solid var(--color-border);
+    margin: 16px 0;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-surface border border-border rounded-card p-5 mb-4 block;
+  }
+  .card-title {
+    @apply text-[13px] font-semibold text-text-muted uppercase tracking-wide mb-4;
+  }
+
+  .input {
+    @apply w-full bg-bg border border-border text-text rounded-md px-2.5 py-2 text-[13px] focus:outline-none focus:border-accent;
+  }
+
+  .checks {
+    @apply flex gap-4 flex-wrap;
+  }
+  .checks label {
+    @apply flex items-center gap-1.5 text-text text-[13px] cursor-pointer m-0;
+  }
+
+  .btn {
+    @apply inline-flex items-center gap-1.5 border-0 rounded-md px-4 py-2 text-[13px] font-medium cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-primary {
+    @apply bg-accent text-white hover:bg-accent-hover;
+  }
+  .btn-danger {
+    @apply bg-danger text-white hover:bg-[#da3633];
+  }
+  .btn-ghost {
+    @apply bg-transparent text-text-muted border border-border hover:text-text hover:border-text-muted;
+  }
+
+  .badge {
+    @apply inline-block text-[11px] font-semibold px-2 py-0.5 rounded-full;
+  }
+  .badge-queued {
+    @apply bg-[#21262d] text-text-muted;
+  }
+  .badge-running {
+    @apply bg-[#0d419d] text-[#58a6ff];
+  }
+  .badge-done {
+    @apply bg-[#1a4428] text-success;
+  }
+  .badge-failed {
+    @apply bg-[#3d1f1f] text-danger;
+  }
+  .badge-cancelled {
+    @apply bg-[#21262d] text-warning;
+  }
+
+  .log-console {
+    @apply bg-[#010409] border border-border rounded-card p-3 h-80 overflow-y-auto font-mono text-xs leading-[1.7];
+    color: #e6edf3;
+  }
+  .log-console .log-line {
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+  .log-console .log-line.err {
+    @apply text-danger;
+  }
+  .log-console .log-empty {
+    @apply text-text-muted italic;
+  }
+
+  table {
+    @apply w-full border-collapse text-[13px];
+  }
+  th {
+    @apply text-left text-[11px] font-semibold text-text-muted uppercase px-3 py-2 border-b border-border;
+  }
+  td {
+    @apply px-3 py-2;
+    border-bottom: 1px solid #21262d;
+  }
+  tr:last-child td {
+    border-bottom: none;
+  }
+  tr:hover td {
+    @apply bg-surface2;
+  }
+
+  .file-list {
+    @apply flex flex-col gap-1.5;
+  }
+  .file-item {
+    @apply flex items-center justify-between bg-surface2 border border-border rounded-md px-3 py-2;
+  }
+  .file-name {
+    font-family: var(--font-mono);
+    @apply text-xs;
+  }
+  .file-size {
+    @apply text-text-muted text-[11px] ml-2;
+  }
+  .file-tool {
+    @apply text-[10px] uppercase tracking-wide text-accent mr-2;
+  }
+
+  .alert {
+    @apply hidden items-center gap-2 rounded-md px-3.5 py-2.5 mb-3 text-[13px];
+  }
+  .alert.show {
+    @apply flex;
+  }
+  .alert-ok {
+    @apply bg-[#1a4428] border border-[#2ea043] text-success;
+  }
+  .alert-err {
+    @apply bg-[#3d1f1f] border border-danger text-danger;
+  }
+
+  .tabs {
+    @apply flex gap-1 mb-5 border-b border-border;
+  }
+  .tab-btn {
+    @apply bg-transparent border-0 text-text-muted text-sm px-4 py-2 cursor-pointer border-b-2 border-transparent -mb-px;
+  }
+  .tab-btn:hover {
+    @apply text-text;
+  }
+  .tab-btn.active {
+    @apply text-accent border-accent;
+  }
+
+  .wikilink {
+    @apply text-accent no-underline;
+  }
+  .wikilink:hover {
+    @apply underline;
+  }
+  .wikilink-missing {
+    @apply text-text-muted line-through cursor-not-allowed;
+  }
+
+  .notes-content {
+    line-height: 1.7;
+  }
+  .notes-content h1,
+  .notes-content h2,
+  .notes-content h3 {
+    margin: 16px 0 8px;
+  }
+  .notes-content p {
+    margin: 8px 0;
+  }
+  .notes-content ul {
+    margin: 8px 0 8px 20px;
+  }
+
+  .chat-bubble {
+    @apply mb-3 break-words;
+  }
+  .chat-bubble.user {
+    @apply max-w-[75%] px-3.5 py-2.5 rounded-card bg-accent text-white ml-auto whitespace-pre-wrap;
+  }
+  .chat-bubble.assistant {
+    line-height: 1.6;
+  }
+  .chat-bubble.assistant h1,
+  .chat-bubble.assistant h2,
+  .chat-bubble.assistant h3 {
+    font-size: 1em;
+    font-weight: 600;
+    margin: 10px 0 6px;
+  }
+  .chat-bubble.assistant h1:first-child,
+  .chat-bubble.assistant h2:first-child,
+  .chat-bubble.assistant h3:first-child {
+    margin-top: 0;
+  }
+  .chat-bubble.assistant p {
+    margin: 8px 0;
+  }
+  .chat-bubble.assistant p:first-child {
+    margin-top: 0;
+  }
+  .chat-bubble.assistant p:last-child {
+    margin-bottom: 0;
+  }
+  .chat-bubble.assistant ul,
+  .chat-bubble.assistant ol {
+    margin: 8px 0 8px 20px;
+  }
+  .chat-bubble.assistant li {
+    margin: 2px 0;
+  }
+  .chat-bubble.assistant pre {
+    @apply bg-bg border border-border rounded-md;
+    margin: 8px 0;
+    padding: 8px 10px;
+    overflow-x: auto;
+    white-space: pre;
+  }
+  .chat-bubble.assistant pre:first-child {
+    margin-top: 0;
+  }
+  .chat-bubble.assistant pre:last-child {
+    margin-bottom: 0;
+  }
+  .chat-bubble.assistant code {
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+  .chat-bubble.assistant :not(pre) > code {
+    @apply bg-bg border border-border rounded;
+    padding: 1px 4px;
+  }
+  .chat-bubble.assistant strong {
+    font-weight: 600;
+  }
+  .chat-bubble.assistant em {
+    font-style: italic;
+  }
+
+  .chat-bubble-copy-btn {
+    @apply absolute -top-2 -right-2 z-10 bg-surface2 border border-border rounded-md p-1.5 text-[12px] font-medium cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-accent hover:text-white;
+  }
+  @media (max-width: 768px) {
+    .chat-bubble-copy-btn {
+      @apply opacity-100;
+    }
+  }
+
+  .chat-scroll {
+    @apply flex-1 overflow-y-auto px-3 py-2;
+  }
+
+  .chat-composer {
+    @apply flex items-center gap-1 bg-surface2 border border-border rounded-full px-2 py-1.5;
+  }
+  .chat-composer-input {
+    @apply flex-1 min-w-0 bg-transparent border-0 text-text text-[14px] px-2 py-1.5 focus:outline-none disabled:opacity-50;
+  }
+  .chat-composer-lang-select {
+    @apply bg-transparent border-0 text-text-muted text-[12px] py-1.5 pl-1 pr-0.5 focus:outline-none disabled:opacity-50;
+  }
+
+  .icon-btn {
+    @apply inline-flex items-center justify-center w-9 h-9 shrink-0 rounded-full border-0 bg-transparent text-text-muted text-[15px] cursor-pointer transition-colors hover:bg-surface2 hover:text-text disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent;
+  }
+  .icon-btn-send {
+    @apply bg-accent text-white hover:bg-accent-hover hover:text-white;
+  }
+  .icon-btn.active {
+    @apply text-accent;
+  }
+  .icon-btn.recording {
+    @apply text-danger;
+    animation: mic-pulse 1s infinite;
+  }
+
+  .chat-attachment-chip {
+    @apply inline-flex items-center gap-1.5 bg-surface2 rounded-full px-3 py-1 text-[12px] text-text-muted;
+  }
+
+  .mobile-nav-toggle {
+    @apply md:hidden inline-flex items-center justify-center w-8 h-8 rounded-full border-0 bg-transparent text-text text-base cursor-pointer hover:bg-surface2;
+  }
+
+  .tool-call {
+    @apply bg-surface2 border border-border rounded-card px-3 py-2 mb-2.5 text-xs;
+  }
+  .tool-call summary {
+    @apply cursor-pointer text-accent;
+    font-family: var(--font-mono);
+  }
+  .tool-call pre {
+    @apply whitespace-pre-wrap break-words mt-2 text-[11px];
+  }
+
+  .chat-sidebar {
+    @apply sticky top-6 max-h-[calc(100dvh-7rem)] overflow-y-auto flex flex-col;
+  }
+  .chat-sidebar-project {
+    @apply mb-4;
+  }
+  .chat-sidebar-project-header {
+    @apply flex items-center justify-between text-text-muted text-[11px] uppercase tracking-wide mb-1.5 mt-3;
+  }
+  .chat-sidebar-folders {
+    @apply flex flex-col gap-1 mb-1.5;
+  }
+  .chat-sidebar-folder {
+    @apply flex items-center justify-between bg-bg border border-border rounded-md px-2 py-1 text-[11px] text-text-muted;
+  }
+  .chat-sidebar-add-folder {
+    @apply mb-2;
+  }
+  .chat-sidebar-item {
+    @apply cursor-pointer;
+  }
+  .chat-sidebar-item.active {
+    @apply border-accent bg-surface2;
+  }
+  .chat-sidebar-title {
+    @apply text-[13px] truncate;
+  }
+  .chat-sidebar-icon-btn {
+    @apply bg-transparent border-0 text-text-muted cursor-pointer p-2 hover:text-text min-w-[32px] min-h-[32px];
+  }
+  .chat-sidebar-new-project {
+    @apply mt-2;
+  }
+
+  .typing-indicator {
+    @apply flex gap-1 items-center w-fit;
+  }
+  .typing-indicator span {
+    @apply w-1.5 h-1.5 rounded-full bg-text-muted inline-block;
+    animation: typing-bounce 1.2s infinite ease-in-out;
+  }
+  .typing-indicator span:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+  .typing-indicator span:nth-child(3) {
+    animation-delay: 0.4s;
+  }
+
+  .modal-backdrop {
+    @apply fixed inset-0 bg-black/60 flex items-center justify-center z-50;
+  }
+  .modal-card {
+    @apply bg-surface border border-border rounded-card p-5 block max-w-sm w-full mx-4;
+  }
+  .grid-2 {
+    @apply grid grid-cols-2 gap-4;
+  }
+
+  .grid-3 {
+    @apply grid grid-cols-3 gap-4;
+  }
+
+  .badge-outline {
+    @apply inline-block border border-current px-2 py-1 rounded text-sm;
+  }
+
+  .btn-xs {
+    @apply inline-block text-sm px-2 py-1 bg-accent text-white rounded hover:bg-accent-hover disabled:opacity-50;
+  }
+}
+
+@keyframes typing-bounce {
+  0%,
+  80%,
+  100% {
+    transform: scale(0.6);
+    opacity: 0.4;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes mic-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}

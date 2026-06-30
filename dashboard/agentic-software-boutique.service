@@ -1,0 +1,15 @@
+[Unit]
+Description=Agentic Software Boutique
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/agentic-software-boutique/dashboard
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/home/ubuntu/agentic-software-boutique/dashboard/.venv/bin/uvicorn dashboard.main:app --host 127.0.0.1 --port 8765 --workers 1
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
