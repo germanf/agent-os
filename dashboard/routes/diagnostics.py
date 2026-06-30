@@ -5,9 +5,16 @@ from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
 from dashboard.config import FRONTEND_DIST
+from dashboard.ponytail import get_metrics, get_status
 from dashboard.rate_limit import limiter
 
 router = APIRouter(prefix="/api", tags=["diagnostics"])
+
+
+@router.get("/ponytail/metrics")
+@limiter.limit("10/minute")
+async def ponytail_metrics(request: Request):
+    return JSONResponse(get_metrics())
 
 
 @router.get("/health")
@@ -32,6 +39,7 @@ async def diagnostics(request: Request):
         "frontend_built": frontend_built,
         "db_exists": db_exists,
         "vault_exists": vault_exists,
+        "ponytail": get_status(),
         "python_version": sys.version.split()[0],
         "fastapi_installed": True,
         "uvicorn_installed": True,
