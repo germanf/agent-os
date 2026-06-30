@@ -4,6 +4,7 @@ import os
 import typing
 
 from fastapi import Request
+from loguru import logger
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
 
@@ -22,6 +23,8 @@ class AuthMiddleware(BaseHTTPMiddleware):
             decoded = __import__("base64").b64decode(encoded).decode("utf-8")
             username, password = decoded.split(":", 1)
         except Exception:
+            client = request.client.host if request.client else "unknown"
+            logger.warning("Invalid auth header from {}: not valid base64", client)
             return Response(status_code=401, headers={"WWW-Authenticate": "Basic"})
         env_user = os.environ.get("DASH_USER", "")
         env_pass = os.environ.get("DASH_PASS", "")
@@ -33,8 +36,8 @@ class AuthMiddleware(BaseHTTPMiddleware):
                         creds = json.load(f)
                     env_user = creds.get("user", "")
                     env_pass = creds.get("pass", "")
-            except Exception:
-                pass
+            except Exception as exc:
+                logger.warning("Failed to read credentials file: {}", exc)
         if not env_user or not env_pass:
             return Response(status_code=500, content="Server configuration error")
         expected = f"{env_user}:{env_pass}"

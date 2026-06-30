@@ -15,6 +15,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 import aiosqlite
+from loguru import logger
 
 DATA_DIR = Path(__file__).parent / "data"
 DB_PATH = DATA_DIR / "chat.db"
@@ -71,6 +72,7 @@ async def _connect(db_path: Path = DB_PATH):
         yield conn
         await conn.commit()
     except Exception:
+        logger.exception("DB transaction failed, rolling back")
         await conn.rollback()
         raise
     finally:
@@ -87,8 +89,8 @@ async def init_db(db_path: Path = DB_PATH) -> None:
         ]:
             try:
                 await conn.execute(f"ALTER TABLE chats ADD COLUMN {col_def}")
-            except Exception:
-                pass  # Column already exists
+            except Exception as exc:
+                logger.debug("Migration column already exists: {}", exc)
 
 
 # ── Projects ──────────────────────────────────────────────────────────────────
