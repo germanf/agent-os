@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Request
 
 from dashboard.kanban import block_task, complete_task, create_task, list_tasks, show_task, unblock_task
+from dashboard.kanban_feedback import poll_once as poll_feedback_once
 from dashboard.models.schemas import KanbanCreateRequest
 from dashboard.rate_limit import limiter
 
@@ -61,4 +62,11 @@ async def unblock_existing_task(request: Request, task_id: str):
     ok = await unblock_task(task_id)
     if not ok:
         raise HTTPException(status_code=404, detail="Task not found or could not unblock")
+    return {"ok": True}
+
+
+@router.post("/feedback/poll")
+@limiter.limit("6/minute")
+async def poll_now(request: Request):
+    await poll_feedback_once()
     return {"ok": True}

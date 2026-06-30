@@ -8,6 +8,7 @@ from dashboard import chat_store
 from dashboard.config import FRONTEND_DIST
 from dashboard.headroom_sidecar import start as start_headroom
 from dashboard.hermes_adapter import init_kanban
+from dashboard.kanban_feedback import start as start_kanban_feedback
 from dashboard.log import configure_logging
 from dashboard.middleware.auth import AuthMiddleware
 from dashboard.middleware.hsts import HSTSHeaderMiddleware
@@ -45,6 +46,7 @@ async def startup():
     await start_headroom()
     await chat_store.init_db()
     await init_kanban()
+    start_kanban_feedback()
 
 
 if (FRONTEND_DIST / "assets").exists():
