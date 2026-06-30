@@ -3,6 +3,7 @@ import asyncio
 from loguru import logger
 
 from . import chat_store
+from .approvals import create_approval, get_pending_for_task
 from .hermes_adapter import get_kanban_path, is_available
 from .kanban import list_tasks
 
@@ -64,13 +65,23 @@ async def _poll_once() -> None:
         existing = await chat_store.list_messages(chat_id)
         if any(m["role"] == "system" and f"Task {task_id} → {status}" in (m.get("content") or "") for m in existing):
             _seen[key] = status
-            continue
-        try:
-            await chat_store.add_message(chat_id, "system", embed)
-            _seen[key] = status
-            logger.info("Notified chat {} about kanban task {}", chat_id, task_id)
-        except Exception as exc:
-            logger.error("Failed to append kanban feedback to chat {}: {}", chat_id, exc)
+        else:
+            try:
+                await chat_store.add_message(chat_id, "system", embed)
+                _seen[key] = status
+                logger.info("Notified chat {} about kanban task {}", chat_id, task_id)
+            except Exception as exc:
+                logger.error("Failed to append kanban feedback to chat {}: {}", chat_id, exc)
+
+        if status == "review":
+            existing_approval = await get_pending_for_task(task_id)
+            if existing_approval is None:
+                await create_approval(
+                    kanban_task_id=task_id,
+                    kanban_tenant=tenant,
+                    task_title=task_data.get("title"),
+                )
+                logger.info("Created approval pending for review task {}", task_id)
 
 
 async def poll_once() -> None:
