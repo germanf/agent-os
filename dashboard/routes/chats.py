@@ -6,6 +6,7 @@ from fastapi.responses import StreamingResponse
 from dashboard import chat_store, runner
 from dashboard.backends import discover
 from dashboard.backends import get as get_backend
+from dashboard.backends.protocol import Done
 from dashboard.config import BASE_DIR, UPLOADS_DIR
 from dashboard.models.schemas import (
     ChatCreateRequest,
@@ -15,6 +16,17 @@ from dashboard.models.schemas import (
     MessageResponse,
 )
 from dashboard.rate_limit import limiter
+from dashboard.utils import format_sse_event
+
+
+async def _event_stream(stream):
+    async for event in stream:
+        if isinstance(event, Done):
+            yield format_sse_event("done", {})
+            return
+        event_type = type(event).__name__
+        yield format_sse_event(event_type, {k: v for k, v in event.__dict__.items()})
+
 
 router = APIRouter(prefix="/api", tags=["chats"])
 
@@ -112,6 +124,16 @@ async def send_message(request: Request, body: ChatSendRequest):
     backend = get_backend(tool_backend)
     if backend is None:
         raise HTTPException(status_code=400, detail=f"Backend '{tool_backend}' not available")
+
+    try:
+        event_stream = backend.stream_chat(
+            message=body.message,
+            session_id=str(body.chat_id),
+            first=user_msg_count <= 1,
+        )
+        return StreamingResponse(_event_stream(event_stream), media_type="text/event-stream")
+    except NotImplementedError:
+        pass
 
     cmd = backend.build_command(
         message=body.message,
