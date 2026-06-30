@@ -4,6 +4,10 @@ Issue → Plan → Dev (branch + PR) → CTO review → **human owner approval**
 
 This is the only pipeline. If you modify it, update this file in the same change — a "real" pipeline that lives only in agents' memory and not in a versioned doc will diverge from what is actually done.
 
+## Language Rule
+
+**Everything written in this repo must be in English — no exceptions.** This applies to: issue titles and bodies, PR titles and descriptions, commit messages, comments on issues and PRs, and any text added to files. The only place where another language is acceptable is in private conversation between the human owner and the CTO agent.
+
 ## Step 0 — Issue + Plan (before writing any code)
 
 - Every bug or feature has an issue. Required category labels (permanent — never removed): `bug`, `feature`, `security`, `documentation`. You can add more, but these four should always be present.
