@@ -17,6 +17,7 @@ from dashboard.routes.backends import router as backends_router
 from dashboard.routes.chats import router as chats_router
 from dashboard.routes.diagnostics import router as diagnostics_router
 from dashboard.routes.jobs import router as jobs_router
+from dashboard.routes.kanban import router as kanban_router
 from dashboard.routes.notes import router as notes_router
 from dashboard.routes.projects import router as projects_router
 
@@ -30,6 +31,7 @@ app.add_middleware(HSTSHeaderMiddleware)
 
 app.include_router(agents_router)
 app.include_router(jobs_router)
+app.include_router(kanban_router)
 app.include_router(backends_router)
 app.include_router(notes_router)
 app.include_router(projects_router)
