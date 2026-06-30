@@ -11,6 +11,7 @@ from dashboard.log import configure_logging
 from dashboard.middleware.auth import AuthMiddleware
 from dashboard.middleware.hsts import HSTSHeaderMiddleware
 from dashboard.rate_limit import limiter
+from dashboard.routes.agents import router as agents_router
 from dashboard.routes.backends import router as backends_router
 from dashboard.routes.chats import router as chats_router
 from dashboard.routes.diagnostics import router as diagnostics_router
@@ -26,6 +27,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(AuthMiddleware)
 app.add_middleware(HSTSHeaderMiddleware)
 
+app.include_router(agents_router)
 app.include_router(jobs_router)
 app.include_router(backends_router)
 app.include_router(notes_router)

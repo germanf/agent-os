@@ -8,6 +8,28 @@ from .protocol import (
     ReviewerCapability,
 )
 
+_registry: dict[str, AgentCapability] = {}
+
+
+def register_agent(agent: AgentCapability) -> None:
+    _registry[agent.name] = agent
+
+
+def get_agent(name: str) -> AgentCapability | None:
+    return _registry.get(name)
+
+
+def list_agents() -> list[dict]:
+    return [
+        {
+            "name": agent.name,
+            "description": agent.description,
+            "capability": agent.capability_id(),
+        }
+        for agent in _registry.values()
+    ]
+
+
 __all__ = [
     "AgentCapability",
     "AgentContext",
@@ -16,7 +38,14 @@ __all__ = [
     "OpencodeAgent",
     "QACapability",
     "ReviewerCapability",
+    "get_agent",
     "is_server_available",
+    "list_agents",
+    "register_agent",
     "start_server",
     "stop_server",
 ]
+
+# ── Auto-register known agents ──────────────────────────────────────────
+
+register_agent(OpencodeAgent())
