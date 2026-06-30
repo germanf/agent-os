@@ -1,4 +1,5 @@
 import asyncio
+import os
 import shutil
 from collections.abc import AsyncIterator
 from pathlib import Path
@@ -35,7 +36,7 @@ async def run_command(
 ) -> tuple[int, str, str]:
     full_cmd = ["hermes", *args]
     logger.debug("hermes {}", " ".join(args))
-    proc_env = {**__import__("os").environ}
+    proc_env = {**os.environ}
     if env:
         proc_env.update(env)
     proc = await asyncio.create_subprocess_exec(

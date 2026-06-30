@@ -8,6 +8,7 @@ from dashboard.backends import discover
 from dashboard.backends import get as get_backend
 from dashboard.backends.protocol import Done
 from dashboard.config import BASE_DIR, UPLOADS_DIR
+from dashboard.kanban import create_task as create_kanban_task
 from dashboard.models.schemas import (
     ChatCreateRequest,
     ChatResponse,
@@ -120,6 +121,14 @@ async def send_message(request: Request, body: ChatSendRequest):
     user_msg_count = sum(1 for m in messages if m["role"] == "user")
     if user_msg_count == 1:
         await _auto_title(body.chat_id, body.message)
+
+    kanban_task = await create_kanban_task(
+        title=body.message if len(body.message) <= 80 else body.message[:77] + "...",
+        body=body.message,
+        tenant=f"chat:{body.chat_id}",
+    )
+    if kanban_task:
+        request.state.kanban_task_id = kanban_task.get("id")
 
     backend = get_backend(tool_backend)
     if backend is None:

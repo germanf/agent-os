@@ -9,13 +9,15 @@ def _shared_env() -> dict:
     return {"HERMES_KANBAN_DB": str(get_kanban_path())}
 
 
-async def list_tasks(status: str | None = None) -> list[dict]:
+async def list_tasks(status: str | None = None, tenant: str | None = None) -> list[dict]:
     if not is_available():
         logger.warning("Hermes not available — cannot list kanban tasks")
         return []
     args = ["kanban", "list", "--json"]
     if status:
         args += ["--status", status]
+    if tenant:
+        args += ["--tenant", tenant]
     code, out, err = await run_command(args, env=_shared_env())
     if code != 0:
         logger.error("Failed to list kanban tasks: {} {}", out, err)
@@ -32,6 +34,7 @@ async def create_task(
     body: str | None = None,
     assignee: str | None = None,
     priority: int | None = None,
+    tenant: str | None = None,
 ) -> dict | None:
     if not is_available():
         logger.warning("Hermes not available — cannot create kanban task")
@@ -43,6 +46,8 @@ async def create_task(
         args += ["--assignee", assignee]
     if priority is not None:
         args += ["--priority", str(priority)]
+    if tenant:
+        args += ["--tenant", tenant]
     code, out, err = await run_command(args, env=_shared_env())
     if code != 0:
         logger.error("Failed to create kanban task: {} {}", out, err)
