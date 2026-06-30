@@ -1,0 +1,22 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": ["AGENTS.md"],
+  "references": {
+    "docs": {
+      "path": "docs",
+      "description": "Architecture, API, DB schema, ops documentation"
+    },
+    "frontend": {
+      "path": "dashboard/frontend/src",
+      "description": "React SPA source code"
+    },
+    "backend": {
+      "path": "dashboard",
+      "description": "FastAPI backend source code"
+    },
+    "specs": {
+      "path": "specs",
+      "description": "Agent role definitions and development workflow"
+    }
+  }
+}

@@ -1,29 +1,34 @@
-# Sandbox Convention: Isolated Environments per Agent
+# Sandbox Isolation Conventions
 
-When multiple implementation agents run in parallel on the same repo, they need isolation to avoid stomping on each other's files, ports, and state. Two complementary mechanisms, not mutually exclusive:
+Two isolation mechanisms for running parallel agents.
 
 ## 1. Git Worktree per Agent
 
-Each agent works in its own `git worktree` (its own branch, its own directory), not in the main checkout. This prevents two concurrent agents from interfering with each other's `git checkout` or commits.
+Each agent works in its own `git worktree` (separate branch, separate directory).
+This prevents branch conflicts when multiple agents work simultaneously.
 
-**Known risk — verify, do not assume:** some "worktree isolation" mechanisms do not reliably guarantee that the agent never ends up operating on the shared main directory. After an agent with isolation finishes, confirm with `git worktree list` and `git status` in the main directory that it is actually intact — do not assume it just because isolation was requested.
+## 2. Docker Containers per Role
 
-**Cleanup order matters:** if there is also a container (see section 2) with a bind-mount to the worktree, stop the container *before* removing the worktree. If the worktree disappears first, the container can be left with hanging processes pointing to a directory that no longer exists.
+Agents run in isolated Docker containers with role-based port ranges:
 
-## 2. Docker Containers per Role, with Fixed Port Ranges
+| Role | Port Range | Container Name Pattern |
+|------|-----------|----------------------|
+| Full Stack Developer | 8800–8849 | `sandbox-<agent-id>` |
+| QA / Tester | 8850–8899 | `sandbox-<agent-id>` |
+| UX/UI Designer | 8900–8949 | `sandbox-<agent-id>` |
 
-If the project supports it, each role runs in its own container with its own port range — prevents collisions when multiple agents are active simultaneously. Example convention (numbers are illustrative — choose what makes sense for your setup):
+### Rules
 
-| Role | Port Range (example) | Data Access |
-|---|---|---|
-| Full Stack Developer | 8800–8849 | Read-write code, mocked credentials |
-| QA/Tester | 8850–8899 | Read-only, data snapshot (not real production) |
-| UX/UI Designer | 8900–8949 | Read-write frontend, read-only backend |
+- Credentials inside the sandbox are always mocked (see `sandbox/fixtures/`).
+- Cleanup order: stop container FIRST, then remove worktree.
+- Single-agent projects may only need worktree isolation.
 
-**Credentials:** always mocked inside the sandbox — never real credentials or production data, not even read-only. Network/port isolation does not substitute for data isolation.
+## Implementation
 
-## When This Is Not Needed
+This project's sandbox implementation lives in `sandbox/`.
+See `sandbox/README.md` for detailed setup, scripts, and troubleshooting.
+See `sandbox/VALIDATION.md` for test documentation.
 
-If you work with a single agent at a time (no real parallelism), a worktree alone is enough to keep git history clean. Docker containers are for when there is real port/process collision from running multiple things simultaneously — not a universal requirement.
+## Agent roles
 
-Related roles: [Full Stack Developer](roles/fullstack-developer.md) · [QA/Tester](roles/qa-tester.md)
+See `specs/roles/` for role definitions and responsibilities.

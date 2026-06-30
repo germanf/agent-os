@@ -1,0 +1,52 @@
+# Dockerfile.base - Base image for isolated agent sandboxes
+# Phase 1: Setup image with Python, Node.js, and dependencies
+
+FROM debian:12-slim
+
+LABEL maintainer="KyoX" \
+      description="Base image for Docker sandboxes - Python 3.11 + Node.js 20 + dev tools"
+
+# Prevent interactive prompts during build
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Set default port for uvicorn
+ENV PORT=8765
+
+# Set working directory
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    # Python runtime
+    python3.11 \
+    python3-pip \
+    python3-venv \
+    # Node.js
+    nodejs \
+    npm \
+    # Git
+    git \
+    # Basic utilities
+    curl \
+    jq \
+    wget \
+    ca-certificates \
+    # Process monitoring
+    net-tools \
+    procps \
+    # Development tools
+    build-essential \
+    # Cleanup
+    && rm -rf /var/lib/apt/lists/*
+
+# Verify installations
+RUN python3 --version && node --version && npm --version && git --version
+
+# Create non-root user for security (optional for Phase 1, can be expanded)
+# RUN useradd -m -s /bin/bash -u 1000 agent
+
+# Expose port (will be overridden by docker-compose)
+EXPOSE 8765
+
+# No ENTRYPOINT yet - scripts will control entry point
+# Entrypoint will be set via docker-compose or command override
