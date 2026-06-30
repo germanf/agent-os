@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
 
 # ── Normalized Event Types ────────────────────────────────────────────────────
@@ -71,6 +72,22 @@ class ChatBackend(ABC):
 
         Return None if the line should be skipped (e.g. non-JSON, pings).
         """
+
+    async def stream_chat(
+        self,
+        message: str,
+        session_id: str,
+        first: bool,
+        project: dict | None = None,
+        file_paths: list[str] | None = None,
+        context_dirs: list[str] | None = None,
+    ) -> AsyncIterator[NormalizedEvent]:
+        """Stream chat response via HTTP/sdk (optional override).
+
+        Default raises NotImplementedError — the caller falls back to
+        the subprocess-based flow (build_command + parse_line).
+        """
+        raise NotImplementedError(f"{type(self).__name__} does not support stream_chat")
 
     def parse_full_transcript(self, log_lines: list[str]) -> tuple[str, list[dict]]:
         """Extract final text and tool calls from all log lines.
