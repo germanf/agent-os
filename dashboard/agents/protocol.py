@@ -32,6 +32,9 @@ class AgentCapability(ABC):
         ...
 
     def capability_id(self) -> str:
+        for cls in type(self).__mro__:
+            if cls is not type(self) and issubclass(cls, AgentCapability) and cls is not AgentCapability:
+                return f"{cls.__module__}.{cls.__qualname__}"
         return f"{type(self).__module__}.{type(self).__qualname__}"
 
 
