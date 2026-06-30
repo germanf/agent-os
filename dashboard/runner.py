@@ -27,6 +27,7 @@ class Job:
     tool: str           # tool identifier (free string)
     command: list[str]
     cwd: str
+    env: dict[str, str] | None = None   # extra env vars (e.g. proxy routing)
     status: Status = Status.QUEUED
     exit_code: int | None = None
     started_at: float = field(default_factory=time.time)
@@ -82,9 +83,9 @@ def _prune_jobs() -> None:
         _jobs.pop(job.id, None)
 
 
-def create_job(tool: str, command: list[str], cwd: str) -> Job:
+def create_job(tool: str, command: list[str], cwd: str, env: dict[str, str] | None = None) -> Job:
     _prune_jobs()
-    job = Job(id=uuid.uuid4().hex[:10], tool=tool, command=command, cwd=cwd)
+    job = Job(id=uuid.uuid4().hex[:10], tool=tool, command=command, cwd=cwd, env=env)
     _jobs[job.id] = job
     return job
 
@@ -107,12 +108,15 @@ async def run_job(job: Job) -> None:
     job.started_at = time.time()
 
     try:
+        proc_env = {**__import__("os").environ}
+        if job.env:
+            proc_env.update(job.env)
         proc = await asyncio.create_subprocess_exec(
             *job.command,
             cwd=job.cwd,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.STDOUT,
-            env={**__import__("os").environ},
+            env=proc_env,
         )
         job._proc = proc
 

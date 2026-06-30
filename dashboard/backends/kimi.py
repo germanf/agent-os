@@ -12,6 +12,9 @@ class KimiBackend(ChatBackend):
     def executable(self) -> str:
         return "kimi"
 
+    def _proxy_env(self, proxy_url: str) -> dict[str, str]:
+        return {}
+
     def build_command(
         self,
         message: str,

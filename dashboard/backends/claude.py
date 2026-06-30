@@ -21,6 +21,9 @@ class ClaudeBackend(ChatBackend):
     def executable(self) -> str:
         return "claude"
 
+    def _proxy_env(self, proxy_url: str) -> dict[str, str]:
+        return {"ANTHROPIC_BASE_URL": proxy_url}
+
     def build_command(
         self,
         message: str,

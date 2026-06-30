@@ -96,6 +96,23 @@ class ChatBackend(ABC):
                     tool_calls[tc["id"]] = tc
         return text, list(tool_calls.values())
 
+    def proxy_env(self) -> dict[str, str]:
+        """Environment variables to route API traffic through the Headroom proxy.
+
+        Returns the env vars for this backend's provider, or empty dict
+        if the proxy is not available or the provider is unknown.
+        """
+        from dashboard.headroom_sidecar import is_available, proxy_url
+
+        if not is_available():
+            return {}
+        url = proxy_url()
+        return self._proxy_env(url)
+
+    def _proxy_env(self, proxy_url: str) -> dict[str, str]:
+        """Override in subclasses to set the provider-specific env var."""
+        return {}
+
     def validate_available(self) -> bool:
         """Check if the executable is available on this system."""
         import shutil
