@@ -9,8 +9,8 @@ router = APIRouter(prefix="/api/kanban", tags=["kanban"])
 
 @router.get("/tasks")
 @limiter.limit("30/minute")
-async def get_tasks(request: Request, status: str | None = None):
-    return await list_tasks(status=status)
+async def get_tasks(request: Request, status: str | None = None, tenant: str | None = None):
+    return await list_tasks(status=status, tenant=tenant)
 
 
 @router.post("/tasks")
@@ -21,6 +21,7 @@ async def create_new_task(request: Request, body: KanbanCreateRequest):
         body=body.body,
         assignee=body.assignee,
         priority=body.priority,
+        tenant=body.tenant,
     )
     if task is None:
         raise HTTPException(status_code=500, detail="Failed to create task")

@@ -79,3 +79,4 @@ class KanbanCreateRequest(BaseModel):
     body: str | None = None
     assignee: str | None = None
     priority: int | None = None
+    tenant: str | None = None
