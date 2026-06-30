@@ -109,7 +109,7 @@ echo ""
 echo -e "${YELLOW}=== Phase 3: CI Checks ===${NC}"
 
 run_test "TypeScript build" \
-  "docker exec claude-sandbox-$AGENT_ID bash -c 'cd /app/dashboard/frontend && npm run build > /dev/null 2>&1'"
+  "docker exec claude-sandbox-$AGENT_ID bash -c 'cd /app/dashboard/frontend && pnpm run build > /dev/null 2>&1'"
 
 run_test "Python syntax validation" \
   "docker exec claude-sandbox-$AGENT_ID bash -c 'python3 -m py_compile /app/dashboard/main.py'"

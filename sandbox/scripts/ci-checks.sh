@@ -51,14 +51,14 @@ if [[ -d /app/dashboard/frontend ]]; then
   echo ""
   echo -e "${YELLOW}=== Frontend Checks ===${NC}"
 
-  run_check "npm dependencies installed" \
-    "cd /app/dashboard/frontend && npm ci --silent"
+  run_check "pnpm dependencies installed" \
+    "cd /app/dashboard/frontend && pnpm install --frozen-lockfile --silent"
 
   run_check "TypeScript build" \
-    "cd /app/dashboard/frontend && npm run build"
+    "cd /app/dashboard/frontend && pnpm run build"
 
   run_check "TypeScript check" \
-    "cd /app/dashboard/frontend && npx tsc --noEmit || true"
+    "cd /app/dashboard/frontend && pnpm exec tsc --noEmit || true"
 else
   echo -e "${YELLOW}Skipping frontend checks (dashboard/frontend not found)${NC}"
 fi

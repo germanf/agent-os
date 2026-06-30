@@ -27,8 +27,8 @@ Después del paso "Pull latest main", ANTES de "Rebuild and restart", agregar:
 - name: Frontend Validations
   run: |
     cd "${{ vars.DEPLOY_PATH }}/dashboard/frontend"
-    npm ci
-    npm run build
+    pnpm install --frozen-lockfile
+    pnpm run build
     echo "✓ Frontend build completed successfully"
 
 - name: Backend Validations

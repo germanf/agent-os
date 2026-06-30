@@ -27,8 +27,8 @@ Validates merged PRs against the test plan with real evidence.
 
 ```bash
 # Frontend tests
-cd dashboard/frontend && npm run test          # vitest
-npm run test:coverage                           # vitest --coverage
+cd dashboard/frontend && pnpm run test          # vitest
+pnpm run test:coverage                           # vitest --coverage
 
 # Python syntax
 python3 -m py_compile dashboard/main.py

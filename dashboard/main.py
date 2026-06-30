@@ -2,14 +2,15 @@
 
 from __future__ import annotations
 
+import asyncio
 import base64
-import json
 import logging
 import os
 import secrets
 import sys
 from pathlib import Path
 
+import backends
 import chat_store
 import config
 import runner as runner_mod
@@ -199,6 +200,77 @@ async def cancel_job_endpoint(request: Request, job_id: str):
     return {"ok": True}
 
 
+@app.get("/api/jobs/{job_id}/events")
+@limiter.limit("30/minute")
+async def stream_job_events(request: Request, job_id: str):
+    """SSE endpoint that streams normalized events (tool-agnostic) instead of raw lines."""
+    job = get_job(job_id)
+    if not job:
+        raise HTTPException(404, "Job not found")
+    backend = backends.get(job.tool)
+    if not backend:
+        raise HTTPException(400, f"No backend registered for tool '{job.tool}'")
+
+    async def event_generator():
+        snapshot = list(job._log_lines)
+        queue: asyncio.Queue = asyncio.Queue()
+        still_running = job.status in (runner_mod.Status.QUEUED, runner_mod.Status.RUNNING)
+        if still_running:
+            job._subscribers.append(queue)
+
+        # Replay existing lines through the backend parser
+        for line in snapshot:
+            evt = backend.parse_line(line)
+            if evt:
+                yield _format_sse_event(evt)
+
+        if not still_running:
+            yield "event: done\ndata: {}\n\n"
+            return
+
+        try:
+            while True:
+                try:
+                    line = await asyncio.wait_for(queue.get(), timeout=25)
+                except TimeoutError:
+                    yield "event: ping\ndata: {}\n\n"
+                    continue
+                if line is None:
+                    break
+                evt = backend.parse_line(line)
+                if evt:
+                    yield _format_sse_event(evt)
+        finally:
+            if queue in job._subscribers:
+                job._subscribers.remove(queue)
+
+        yield "event: done\ndata: {}\n\n"
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
+
+
+@app.get("/api/backends")
+@limiter.limit("30/minute")
+async def list_backends(request: Request):
+    """List available chat backends."""
+    return {
+        "available": backends.list_available(),
+        "all": backends.list_all_registered(),
+    }
+
+
+def _format_sse_event(evt) -> str:
+    """Serialize a NormalizedEvent to an SSE data line."""
+    import dataclasses
+    import json as _json
+    payload = _json.dumps(dataclasses.asdict(evt), default=str)
+    return f"data: {payload}\n\n"
+
+
 # ── Notes (vault de Obsidian) ─────────────────────────────────────────────────
 
 def _build_note_tree(directory: Path) -> list[dict]:
@@ -362,28 +434,15 @@ class ChatRequest(BaseModel):
     file_paths: list[str] | None = None
 
 
-async def _build_chat_command(req: ChatRequest) -> list[str]:
-    message = req.message
-    if req.file_paths:
-        file_list = "\n".join(req.file_paths)
-        message = f"{message}\n\n[Attached files]:\n{file_list}"
-    cmd = [
-        "claude", "-p", message,
-        "--output-format", "stream-json",
-        "--verbose",
-        "--include-partial-messages",
-        "--permission-mode", "bypassPermissions",
-        "--add-dir", str(VAULT_DIR),
-    ]
-    if req.project_id is not None:
-        project = await chat_store.get_project(req.project_id)
-        if project:
-            if project.get("system_prompt"):
-                cmd += ["--append-system-prompt", project["system_prompt"]]
-            for folder in project["folders"]:
-                cmd += ["--add-dir", folder["path"]]
-    cmd += ["--session-id", req.session_id] if req.first else ["--resume", req.session_id]
-    return cmd
+async def _get_backend_for_chat(chat_id: str | None) -> backends.ChatBackend:
+    """Get the backend for a chat, falling back to the selected backend."""
+    if chat_id:
+        chat = await chat_store.get_chat(chat_id)
+        if chat and chat.get("tool_backend"):
+            b = backends.get(chat["tool_backend"])
+            if b:
+                return b
+    return backends.select_backend()
 
 
 def _auto_title(text: str, limit: int = 50) -> str:
@@ -391,40 +450,17 @@ def _auto_title(text: str, limit: int = 50) -> str:
     return text[:limit] + ("…" if len(text) > limit else "")
 
 
-def _parse_chat_transcript(log_lines: list[str]) -> tuple[str, list[dict]]:
-    """Extract the final assistant text and tool calls from raw stream-json lines."""
-    text = ""
-    tool_calls: dict[str, dict] = {}
-    for line in log_lines:
-        try:
-            evt = json.loads(line)
-        except (json.JSONDecodeError, TypeError) as exc:
-            logger.warning("Skipping malformed chat transcript line: %s", exc)
-            continue
-        if evt.get("type") == "assistant":
-            for block in evt.get("message", {}).get("content", []):
-                if block.get("type") == "tool_use":
-                    tool_calls[block["id"]] = {
-                        "id": block["id"],
-                        "name": block["name"],
-                        "input": block.get("input"),
-                    }
-        elif evt.get("type") == "user":
-            for block in evt.get("message", {}).get("content", []):
-                if block.get("type") == "tool_result":
-                    tc = tool_calls.get(block.get("tool_use_id"))
-                    if tc is not None:
-                        content = block.get("content")
-                        tc["result"] = content if isinstance(content, str) else json.dumps(content)
-        elif evt.get("type") == "result":
-            text = evt.get("result", "")
-    return text, list(tool_calls.values())
+
 
 
 async def _run_chat_job(job: runner_mod.Job, chat_id: str) -> None:
     try:
         await run_job(job)
-        text, tool_calls = _parse_chat_transcript(job._log_lines)
+        backend = backends.get(job.tool)
+        if not backend:
+            logger.warning("Unknown backend '%s' for job %s", job.tool, job.id)
+            return
+        text, tool_calls = backend.parse_full_transcript(job._log_lines)
         if not text and not tool_calls:
             return
         await chat_store.add_message(chat_id, "assistant", text, tool_calls or None)
@@ -442,10 +478,25 @@ async def chat_send(request: Request, req: ChatRequest, bg: BackgroundTasks):
     if not await chat_store.get_chat(req.session_id):
         raise HTTPException(404, "Chat not found — create it first via POST /api/chats")
     await chat_store.add_message(req.session_id, "user", req.message)
-    cmd = await _build_chat_command(req)
-    job = create_job("chat", cmd, cwd=str(ROOT_DIR))
+
+    backend = await _get_backend_for_chat(req.session_id)
+    project = None
+    if req.project_id is not None:
+        project = await chat_store.get_project(req.project_id)
+
+    context_dirs = [str(VAULT_DIR)] if VAULT_DIR.exists() else []
+
+    cmd = backend.build_command(
+        message=req.message,
+        session_id=req.session_id,
+        first=req.first,
+        project=project,
+        file_paths=req.file_paths,
+        context_dirs=context_dirs,
+    )
+    job = create_job(backend.name, cmd, cwd=str(ROOT_DIR))
     bg.add_task(_run_chat_job, job, req.session_id)
-    return {"job_id": job.id}
+    return {"job_id": job.id, "tool_backend": backend.name}
 
 
 @app.post("/api/files/upload")

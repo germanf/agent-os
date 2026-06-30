@@ -1,5 +1,6 @@
 {
   "$schema": "https://opencode.ai/config.json",
+  "model": "opencode/big-pickle",
   "instructions": ["AGENTS.md"],
   "references": {
     "docs": {
@@ -17,6 +18,26 @@
     "specs": {
       "path": "specs",
       "description": "Agent role definitions and development workflow"
+    }
+  },
+  "agent": {
+    "build": {
+      "model": "nvidia/deepseek-ai/deepseek-v4-pro"
+    },
+    "plan": {
+      "model": "nvidia/deepseek-ai/deepseek-v4-pro"
+    },
+    "explore": {
+      "mode": "subagent",
+      "model": "nvidia/deepseek-ai/deepseek-v4-flash"
+    },
+    "general": {
+      "mode": "subagent",
+      "model": "nvidia/deepseek-ai/deepseek-v4-pro"
+    },
+    "scout": {
+      "mode": "subagent",
+      "model": "nvidia/minimaxai/minimax-m3"
     }
   }
 }

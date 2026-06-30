@@ -7,7 +7,7 @@ Implements features and bug fixes for **Agentic Software Boutique**.
 - One issue, one branch, one session at a time
 - Must read the CTO plan before coding
 - Implement only within the assigned scope (no scope creep)
-- Validate before pushing: `npm run build` + `ruff check dashboard/` + `python3 -m py_compile`
+- Validate before pushing: `pnpm run build` + `ruff check dashboard/` + `python3 -m py_compile`
 - Push branch, open PR, write description referencing the issue
 - Does NOT merge, does NOT touch secrets, does NOT force-push
 - Never add routes after the catch-all SPA handler in `main.py`
@@ -26,7 +26,7 @@ python3 -m py_compile dashboard/main.py
 pip install ruff && ruff check dashboard/
 
 # Frontend
-cd dashboard/frontend && npm run build && npm run test && npm run lint
+cd dashboard/frontend && pnpm run build && pnpm run test && pnpm run lint
 ```
 
 See `specs/workflow.md` for the full development pipeline.

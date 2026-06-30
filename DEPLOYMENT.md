@@ -14,7 +14,7 @@ This guide covers the production deployment of the Agentic Software Boutique on 
 
 Before running `dashboard/start.sh`, ensure:
 
-1. **Node.js & npm** are installed (required for frontend build):
+1. **Node.js & pnpm** are installed (required for frontend build):
    ```bash
    # Example: install via nvm
    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
@@ -116,7 +116,7 @@ bash dashboard/start.sh
 This script will:
 - Create a Python virtual environment
 - Install Python dependencies
-- Build the frontend (npm ci + npm run build)
+- Build the frontend (pnpm install --frozen-lockfile + pnpm run build)
 - Generate/verify the self-signed SSL certificate
 - Install and configure nginx
 - Set up the uvicorn systemd service

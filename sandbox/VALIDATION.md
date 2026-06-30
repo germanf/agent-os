@@ -316,7 +316,7 @@ cd /app
 ./sandbox/scripts/ci-checks.sh
 
 # Check build logs
-npm run build 2>&1 | tail -20
+pnpm run build 2>&1 | tail -20
 ```
 
 ### Common Issues

@@ -31,11 +31,11 @@ python3 -m py_compile dashboard/main.py                   # syntax check
 ruff check dashboard/                                      # lint (install: pip install ruff)
 
 # Frontend (dashboard/frontend/)
-npm run dev           # Vite dev server, proxies /api and /auth to :8765
-npm run build         # tsc -b + vite build → dist/
-npm run test          # vitest
-npm run test:coverage # vitest --coverage
-npm run lint          # eslint
+pnpm run dev           # Vite dev server, proxies /api and /auth to :8765
+pnpm run build         # tsc -b + vite build → dist/
+pnpm run test          # vitest
+pnpm run test:coverage # vitest --coverage
+pnpm run lint          # eslint
 
 # Deployment (production VM)
 bash dashboard/start.sh   # idempotent: builds frontend, creates venv, configures nginx+systemd
@@ -97,7 +97,7 @@ bash dashboard/start.sh   # idempotent: builds frontend, creates venv, configure
 - `nginx` + `uvicorn` on ports 80/443/8765
 - iptables firewall (persisted via `netfilter-persistent`): adding a new `listen <port>` in nginx.conf also needs a matching iptables rule before the traffic flows.
 
-**Static verification in sandbox**: `python3 -m py_compile`, `npm run build`, instantiate FastAPI app and check `app.routes`, test API endpoints with `TestClient`. Never try to simulate Claude CLI, vault, or nginx here.
+**Static verification in sandbox**: `python3 -m py_compile`, `pnpm run build`, instantiate FastAPI app and check `app.routes`, test API endpoints with `TestClient`. Never try to simulate Claude CLI, vault, or nginx here.
 
 ## Sandbox containers (`sandbox/`)
 

@@ -5,12 +5,12 @@ React 19 SPA, TypeScript, Tailwind v4, Vite 8.
 ## Quick start
 
 ```bash
-npm install        # install dependencies
-npm run dev        # Vite dev server (proxies /api and /auth to :8765)
-npm run build      # tsc -b && vite build → dist/
-npm run test       # vitest
-npm run test:coverage  # vitest --coverage
-npm run lint       # eslint
+pnpm install        # install dependencies
+pnpm run dev        # Vite dev server (proxies /api and /auth to :8765)
+pnpm run build      # tsc -b && vite build → dist/
+pnpm run test       # vitest
+pnpm run test:coverage  # vitest --coverage
+pnpm run lint       # eslint
 ```
 
 ## Dev proxy

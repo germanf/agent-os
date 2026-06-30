@@ -42,8 +42,12 @@ interface ChatDetail extends ChatSummary {
   messages: PersistedMessage[];
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnyEvent = any;
+type NormalizedEvent =
+  | { type: "text_delta"; content: string }
+  | { type: "tool_use"; id: string; name: string; input: unknown }
+  | { type: "tool_result"; id: string; content: string }
+  | { type: "assistant_message"; content: string; tool_calls: { id: string; name: string; input: unknown; result?: string }[] }
+  | { type: "done" };
 
 function formatFileSize(bytes: number): string {
   if (bytes === 0) return "0 B";
@@ -231,29 +235,35 @@ export default function Chat() {
     scrollToBottom();
   }
 
-  function handleChatEvent(evt: AnyEvent) {
-    if (evt.type === "stream_event" && evt.event?.type === "content_block_delta") {
-      const delta = evt.event.delta;
-      if (delta?.type === "text_delta") {
-        receivedAnyRef.current = true;
-        if (!currentAssistantId.current) {
-          currentAssistantId.current = addBubble("assistant", "");
-          currentAssistantTextRef.current = "";
-        }
-        currentAssistantTextRef.current += delta.text;
-        appendToAssistant(currentAssistantId.current, delta.text);
+  function handleNormalizedEvent(evt: NormalizedEvent) {
+    if (evt.type === "text_delta") {
+      receivedAnyRef.current = true;
+      if (!currentAssistantId.current) {
+        currentAssistantId.current = addBubble("assistant", "");
+        currentAssistantTextRef.current = "";
       }
+      currentAssistantTextRef.current += evt.content;
+      appendToAssistant(currentAssistantId.current, evt.content);
       return;
     }
 
-    if (evt.type === "assistant" && evt.message?.content) {
+    if (evt.type === "tool_use") {
+      addToolCall(evt.id, evt.name, evt.input);
+      return;
+    }
+
+    if (evt.type === "tool_result") {
+      fillToolResult(evt.id, evt.content);
+      return;
+    }
+
+    if (evt.type === "assistant_message") {
       receivedAnyRef.current = true;
-      for (const block of evt.message.content) {
-        if (block.type === "text" && !currentAssistantId.current) {
-          addBubble("assistant", block.text);
-        } else if (block.type === "tool_use") {
-          addToolCall(block.id, block.name, block.input);
-        }
+      for (const tc of evt.tool_calls) {
+        addToolCall(tc.id, tc.name, tc.input);
+      }
+      if (evt.content && !currentAssistantId.current) {
+        addBubble("assistant", evt.content);
       }
       if (currentAssistantId.current && ttsEnabledRef.current && currentAssistantTextRef.current.trim()) {
         speak(currentAssistantTextRef.current, speechLangRef.current);
@@ -263,17 +273,7 @@ export default function Chat() {
       return;
     }
 
-    if (evt.type === "user" && evt.message?.content) {
-      for (const block of evt.message.content) {
-        if (block.type === "tool_result") {
-          const text = typeof block.content === "string" ? block.content : JSON.stringify(block.content);
-          fillToolResult(block.tool_use_id, text);
-        }
-      }
-      return;
-    }
-
-    if (evt.type === "result") {
+    if (evt.type === "done") {
       currentAssistantId.current = null;
       firstRef.current = false;
     }
@@ -287,25 +287,17 @@ export default function Chat() {
 
     function connect() {
       sseRef.current?.close();
-      const sse = new EventSource(`/api/jobs/${jobId}/stream`);
+      const sse = new EventSource(`/api/jobs/${jobId}/events`);
       sseRef.current = sse;
 
       sse.onmessage = e => {
         retries = 0;
-        let line: string;
         try {
-          line = JSON.parse(e.data);
+          const evt: NormalizedEvent = JSON.parse(e.data);
+          handleNormalizedEvent(evt);
         } catch {
           return;
         }
-        if (!line) return;
-        let evt: AnyEvent;
-        try {
-          evt = JSON.parse(line);
-        } catch {
-          return;
-        }
-        handleChatEvent(evt);
       };
 
       sse.addEventListener("done", () => {

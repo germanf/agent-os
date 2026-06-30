@@ -39,6 +39,8 @@ CREATE TABLE IF NOT EXISTS chats (
     project_id         INTEGER REFERENCES projects(id) ON DELETE SET NULL,
     title              TEXT NOT NULL DEFAULT '',
     claude_session_id  TEXT NOT NULL,
+    tool_session_id    TEXT,
+    tool_backend       TEXT NOT NULL DEFAULT 'claude',
     created_at         REAL NOT NULL,
     updated_at         REAL NOT NULL
 );
@@ -78,6 +80,15 @@ async def _connect(db_path: Path = DB_PATH):
 async def init_db(db_path: Path = DB_PATH) -> None:
     async with _connect(db_path) as conn:
         await conn.executescript(_SCHEMA)
+        # Migrations for existing databases
+        for col, col_def in [
+            ("tool_backend", "tool_backend TEXT NOT NULL DEFAULT 'claude'"),
+            ("tool_session_id", "tool_session_id TEXT"),
+        ]:
+            try:
+                await conn.execute(f"ALTER TABLE chats ADD COLUMN {col_def}")
+            except Exception:
+                pass  # Column already exists
 
 
 # ── Projects ──────────────────────────────────────────────────────────────────
@@ -172,16 +183,20 @@ async def create_chat(
     chat_id: str | None = None,
     claude_session_id: str | None = None,
     project_id: int | None = None,
+    tool_backend: str | None = None,
     db_path: Path = DB_PATH,
 ) -> dict:
-    chat_id = chat_id or str(uuid.uuid4())  # dashed format — required by `claude --session-id`
+    chat_id = chat_id or str(uuid.uuid4())
     claude_session_id = claude_session_id or chat_id
+    tool_session_id: str = claude_session_id
+    backend = tool_backend or "claude"
     now = time.time()
     async with _connect(db_path) as conn:
         await conn.execute(
-            """INSERT INTO chats (id, project_id, title, claude_session_id, created_at, updated_at)
-               VALUES (?, ?, '', ?, ?, ?)""",
-            (chat_id, project_id, claude_session_id, now, now),
+            """INSERT INTO chats
+               (id, project_id, title, claude_session_id, tool_session_id, tool_backend, created_at, updated_at)
+               VALUES (?, ?, '', ?, ?, ?, ?, ?)""",
+            (chat_id, project_id, claude_session_id, tool_session_id, backend, now, now),
         )
     return await get_chat(chat_id, db_path=db_path)
 

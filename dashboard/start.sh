@@ -31,8 +31,8 @@ error() {
 
 # ── Frontend (validate in temp location first) ─────────────────────────────────
 log "Validating frontend build..."
-if ! command -v npm &>/dev/null; then
-  error "npm not found. Install Node.js (e.g., via nvm) on this VM"
+if ! command -v pnpm &>/dev/null; then
+  error "pnpm not found. Install Node.js + pnpm (e.g., via nvm + corepack) on this VM"
 fi
 
 FRONTEND_DIR="$SCRIPT_DIR/frontend"
@@ -42,7 +42,7 @@ if [[ ! -d "$FRONTEND_DIR" ]]; then
   error "Frontend directory not found at $FRONTEND_DIR"
 fi
 
-if ! (cd "$FRONTEND_DIR" && npm ci >> "$LOG_FILE" 2>&1 && npm run build >> "$LOG_FILE" 2>&1); then
+if ! (cd "$FRONTEND_DIR" && pnpm install --frozen-lockfile >> "$LOG_FILE" 2>&1 && pnpm run build >> "$LOG_FILE" 2>&1); then
   error "Frontend build failed. Check $LOG_FILE for details"
 fi
 

@@ -24,10 +24,10 @@ Issue → Plan → Dev (branch + PR) → CTO review → Human Owner Approval →
 - One issue, one branch, one agent session at a time.
 - Full Stack Developer implements following the plan.
 - Validate before push:
-  - `npm run build` (frontend compiles)
+  - `pnpm run build` (frontend compiles)
   - `pip install ruff && ruff check dashboard/` (backend lint)
   - `python3 -m py_compile dashboard/main.py` (backend syntax)
-  - `npm run test` (frontend tests pass)
+  - `pnpm run test` (frontend tests pass)
 - Open PR against `main`.
 - PR description references the issue: `Related to #N` (not `Closes #N`).
 

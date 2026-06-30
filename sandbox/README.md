@@ -55,7 +55,7 @@ Each agent picks the first available port in its range.
 
 **Includes**:
 - Python 3.11 + pip + venv
-- Node.js 20 + npm
+- Node.js 20 + pnpm
 - Git
 - Utilities: curl, jq, wget, build-essential
 - Port: 8765 (default, overridable)
@@ -94,7 +94,7 @@ Access: http://127.0.0.1:8800
 docker exec -it claude-sandbox-agent-001 bash
 
 # Run a command
-docker exec claude-sandbox-agent-001 npm run build
+docker exec claude-sandbox-agent-001 pnpm run build
 
 # View logs
 docker logs claude-sandbox-agent-001
@@ -126,7 +126,7 @@ docker logs -f claude-sandbox-agent-001  # Follow logs
 4. Starts container with `docker-compose up -d`
 5. Waits for container readiness
 6. Runs `ci-checks.sh` inside container:
-   - TypeScript compilation (`npm run build`)
+   - TypeScript compilation (`pnpm run build`)
    - Python syntax validation (`py_compile`)
 7. Reports status and access URL
 8. **Returns exit code 0 if checks pass, 1 if checks fail**
@@ -168,7 +168,7 @@ docker logs -f claude-sandbox-agent-001  # Follow logs
 **Runs inside container** (called by `sandbox-up.sh`)
 
 **Checks:**
-1. **TypeScript compilation**: `cd dashboard/frontend && npm run build`
+1. **TypeScript compilation**: `cd dashboard/frontend && pnpm run build`
 2. **Python syntax validation**: `py_compile` on all `.py` files in `dashboard/`
 3. **Requirements validation**: Parses `dashboard/requirements.txt`
 
@@ -374,7 +374,7 @@ claude-sandbox-agent-001/         # Container name (dynamic)
 # Inside container, test build
 docker exec claude-sandbox-agent-fe-001 bash -c "
   cd /app/dashboard/frontend
-  npm run build
+  pnpm run build
 "
 
 # Check build output

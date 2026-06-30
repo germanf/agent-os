@@ -42,6 +42,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Verify installations
 RUN python3 --version && node --version && npm --version && git --version
 
+# Install pnpm
+RUN npm install -g pnpm && pnpm --version
+
 # Create non-root user for security (optional for Phase 1, can be expanded)
 # RUN useradd -m -s /bin/bash -u 1000 agent
 

@@ -23,6 +23,8 @@ export interface ChatSummary {
   project_id: number | null;
   title: string;
   claude_session_id: string;
+  tool_session_id: string | null;
+  tool_backend: string;
   created_at: number;
   updated_at: number;
 }
