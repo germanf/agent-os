@@ -72,3 +72,10 @@ class MessageResponse(BaseModel):
 class ChatSendRequest(BaseModel):
     chat_id: str
     message: str
+
+
+class KanbanCreateRequest(BaseModel):
+    title: str
+    body: str | None = None
+    assignee: str | None = None
+    priority: int | None = None

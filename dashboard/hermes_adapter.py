@@ -30,14 +30,20 @@ def get_kanban_path() -> Path:
     return DATA_DIR / "hermes_kanban.db"
 
 
-async def run_command(args: list[str], cwd: str | None = None) -> tuple[int, str, str]:
+async def run_command(
+    args: list[str], cwd: str | None = None, env: dict[str, str] | None = None
+) -> tuple[int, str, str]:
     full_cmd = ["hermes", *args]
     logger.debug("hermes {}", " ".join(args))
+    proc_env = {**__import__("os").environ}
+    if env:
+        proc_env.update(env)
     proc = await asyncio.create_subprocess_exec(
         *full_cmd,
         cwd=cwd or str(DATA_DIR),
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
+        env=proc_env,
     )
     stdout, stderr = await proc.communicate()
     return proc.returncode or 0, stdout.decode(), stderr.decode()
