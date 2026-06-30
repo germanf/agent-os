@@ -5,6 +5,7 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
 from dashboard import chat_store
+from dashboard.approvals import init_approvals
 from dashboard.config import FRONTEND_DIST
 from dashboard.headroom_sidecar import start as start_headroom
 from dashboard.hermes_adapter import init_kanban
@@ -14,9 +15,11 @@ from dashboard.middleware.auth import AuthMiddleware
 from dashboard.middleware.hsts import HSTSHeaderMiddleware
 from dashboard.rate_limit import limiter
 from dashboard.routes.agents import router as agents_router
+from dashboard.routes.approvals import router as approvals_router
 from dashboard.routes.backends import router as backends_router
 from dashboard.routes.chats import router as chats_router
 from dashboard.routes.diagnostics import router as diagnostics_router
+from dashboard.routes.hermes_webhook import router as hermes_webhook_router
 from dashboard.routes.jobs import router as jobs_router
 from dashboard.routes.kanban import router as kanban_router
 from dashboard.routes.notes import router as notes_router
@@ -38,6 +41,8 @@ app.include_router(notes_router)
 app.include_router(projects_router)
 app.include_router(chats_router)
 app.include_router(diagnostics_router)
+app.include_router(approvals_router)
+app.include_router(hermes_webhook_router)
 
 
 @app.on_event("startup")
@@ -46,6 +51,7 @@ async def startup():
     await start_headroom()
     await chat_store.init_db()
     await init_kanban()
+    await init_approvals()
     start_kanban_feedback()
 
 

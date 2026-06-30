@@ -87,3 +87,12 @@ async def unblock_task(task_id: str) -> bool:
         return False
     code, out, err = await run_command(["kanban", "unblock", task_id], env=_shared_env())
     return code == 0
+
+
+async def comment_task(task_id: str, body: str) -> bool:
+    if not is_available():
+        return False
+    code, out, err = await run_command(
+        ["kanban", "comment", task_id, body], env=_shared_env()
+    )
+    return code == 0
