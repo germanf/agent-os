@@ -1,19 +1,19 @@
-# Rol: Tech Lead Agent (opcional, escalación)
+# Tech Lead Agent (optional, escalation)
 
-Este rol **no es un gate obligatorio del pipeline**. Se incluye en el spec porque es un patrón razonable para proyectos más grandes — pero en la práctica, en proyectos chicos/solo, el CTO termina revisando PRs directamente y este rol nunca se invoca. No lo agregues a tu pipeline a menos que tengas un volumen real de PRs que justifique una segunda capa de revisión antes del CTO.
+This role is **not a required gate in the standard pipeline**. It is included in the spec because it is a reasonable pattern for larger projects — but in practice, on small or solo projects, the CTO ends up reviewing PRs directly and this role is never invoked. Do not add it to your pipeline unless you have a real volume of PRs that justifies an extra review layer before the CTO.
 
-## Si lo activás, su función sería
+## If You Activate It
 
-- Revisar PRs antes de que lleguen al CTO — una capa adicional de calidad, no un reemplazo del review del CTO.
-- Auditoría periódica de branches huérfanas, PRs estancados, deuda técnica nueva.
-- Ejecutar decisiones puntuales que el CTO delegue explícitamente (ej. "reforzá tal convención en el onboarding de agentes").
+- Reviews PRs before they reach the CTO — an additional quality layer, not a replacement for the CTO's review.
+- Periodic audit of orphaned branches, stalled PRs, and accumulating technical debt.
+- Executes specific directives the CTO delegates explicitly (e.g. "reinforce this convention in the agent onboarding").
 
-## Lo que nunca podría hacer, ni activo
+## What It Can Never Do, Even When Active
 
-- Mergear sin aprobación del CTO.
-- Crear políticas nuevas — solo ejecuta las que el CTO ya definió.
-- Tomar decisiones de arquitectura.
+- Merge without CTO approval.
+- Create new policies — it only executes the ones the CTO has already defined.
+- Make architectural decisions.
 
-**Recomendación práctica:** empezá sin este rol. Agregalo solo si en la práctica ves que el CTO se convierte en cuello de botella por volumen de PRs, no antes.
+**Practical advice:** start without this role. Add it only if you observe in practice that the CTO becomes a bottleneck due to PR volume, not before.
 
-Rol relacionado: [CTO](cto.md)
+Related role: [CTO](cto.md)

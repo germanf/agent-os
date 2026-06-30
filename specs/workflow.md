@@ -1,47 +1,47 @@
-# Workflow: el pipeline de desarrollo
+# Development Workflow
 
-Issue → Plan → Dev (rama + PR) → CTO review → **aprobación del usuario** → CTO merge → QA → cierre.
+Issue → Plan → Dev (branch + PR) → CTO review → **human owner approval** → CTO merge → QA → close.
 
-Este es el único pipeline — no debería haber una segunda versión circulando en paralelo. Si lo modificás, actualizá este archivo en el mismo cambio; un pipeline "real" que vive solo en la memoria de los agentes y no en un doc versionado termina divergiendo de lo que en verdad se hace.
+This is the only pipeline. If you modify it, update this file in the same change — a "real" pipeline that lives only in agents' memory and not in a versioned doc will diverge from what is actually done.
 
-## 0. Issue + Plan (antes de escribir código)
+## Step 0 — Issue + Plan (before writing any code)
 
-- Cada bug/feature tiene un issue. Etiquetas de categoría obligatorias y permanentes (nunca se borran): `bug`, `feature`, `security`, `documentation` — podés agregar más, pero estas cuatro no deberían faltar nunca en ningún issue.
-- El CTO comenta en el issue un plan breve antes de delegar: root cause (si es bug), archivos a tocar, constraints técnicos. Esto no es burocracia — es lo que evita que el implementador rediseñe sobre la marcha y se desvíe del alcance.
-- Convención de nombres de rama: `fix/nombre-corto` para bugs, `feature/nombre-corto` para features.
+- Every bug or feature has an issue. Required category labels (permanent — never removed): `bug`, `feature`, `security`, `documentation`. You can add more, but these four should always be present.
+- The CTO comments a brief plan on the issue before delegating: root cause (for bugs), files to touch, technical constraints. This is not bureaucracy — it is what prevents the implementer from redesigning on the fly and drifting from scope.
+- Branch naming convention: `fix/<short-name>` for bugs, `feature/<short-name>` for features.
 
-## 1. Dev (Full Stack Developer Agent)
+## Step 1 — Dev (Full Stack Developer Agent)
 
-- Rama desde la rama principal, siguiendo el plan del paso 0.
-- Implementa, valida localmente (build/tests, o el entorno de sandbox si el proyecto tiene uno — ver [sandbox.md](sandbox.md)).
-- Pushea la rama y **abre el PR** — el implementador escribe la descripción porque tiene el contexto completo del diff. El PR no cierra el issue todavía (`Refs #N`, no `Closes #N`) — el cierre lo hace QA después de validar, no el merge.
+- Branch from main, following the plan from step 0.
+- Implement, validate locally (build/tests, or the sandbox environment if the project has one — see [sandbox.md](sandbox.md)).
+- Push the branch and **open the PR** — the implementer writes the description because they have the full context of the diff. The PR references the issue but does not close it (`Related to #N`, not `Closes #N`) — the issue is closed by QA after validation, not by the merge.
 
-## 2. CTO (Code Review)
+## Step 2 — CTO (Code Review)
 
-- Revisa correctness, seguridad, estilo.
-- Si hay comentarios, el Dev los resuelve y el CTO revisa de nuevo — un PR con comentarios sin resolver no se mergea, sin excepciones de "mergeamos y arreglamos después".
-- Si está OK, pasa al paso 2.5 — **el CTO no mergea todavía**, aunque ya lo haya aprobado técnicamente.
+- Reviews correctness, security, and style.
+- If there are comments, the Dev resolves them and the CTO reviews again — a PR with unresolved comments does not get merged, no exceptions of "merge now, fix later."
+- If everything is OK, moves to step 2.5 — **the CTO does not merge yet**, even after technical approval.
 
-## 2.5. Aprobación del usuario — el gate que no se salta
+## Step 2.5 — Human Owner Approval (the gate that is never skipped)
 
-Este es el paso con más consecuencia de todo el pipeline, y es deliberadamente manual.
+This is the highest-consequence step in the entire pipeline, and it is deliberately manual.
 
-**Por qué existe pese a que el CTO ya tiene autoridad técnica total:** la autoridad del CTO cubre decisiones técnicas — arquitectura, cómo se implementa algo. No reemplaza al usuario como gate de qué llega a producción. Son ejes distintos: uno es "¿está bien construido?", el otro es "¿quiero que esto exista en el mundo, ahora, así?" — y el segundo es una decisión que el usuario nunca delegó, ni siquiera cuando delega todo lo técnico.
+**Why it exists despite the CTO having full technical authority:** the CTO's authority covers technical decisions — architecture, how something is implemented. It does not replace the human owner as the gate for what reaches production. These are different axes: "is it well built?" vs. "do I want this to exist in the world, now, like this?" — and the second is a decision the owner has never delegated, not even when delegating everything technical.
 
-El costo de pedir esta aprobación es bajo (un mensaje, una respuesta). El costo de mergear sin ella, si el usuario no lo quería, no es reversible de la misma forma — el código ya corrió, ya se desplegó, ya tuvo efecto. Esa asimetría es la razón de fondo del gate, no burocracia por la burocracia.
+The cost of asking for this approval is low (one message, one response). The cost of merging without it, if the owner did not want it, is not reversible in the same way — the code has already run, deployed, taken effect. That asymmetry is the fundamental reason for this gate, not bureaucracy for its own sake.
 
-**Cómo se salta, si alguna vez corresponde:** solo con instrucción explícita y específica del usuario — "mergeá esto sin preguntarme" en ese momento puntual, o una autorización duradera tipo "mergeá lo que vos apruebes, no me consultes cada vez" dicha de forma clara. Una frase ambigua de alcance general ("encargate de todo", "manejate vos") **no** cuenta como esa autorización — si hay ambigüedad real sobre si el usuario quiso decir esto, se pregunta, no se asume.
+**How to skip it, if ever appropriate:** only with an explicit and specific instruction from the human owner — "merge this without asking me" in that specific moment, or a standing authorization like "merge whatever you approve, don't consult me each time" stated clearly. A vague general phrase ("handle everything," "you decide") does **not** count as that authorization — if there is real ambiguity about whether the owner meant this, ask; do not assume.
 
-## 3. CTO Merge
+## Step 3 — CTO Merge
 
-Una vez aprobado por el usuario: el CTO mergea, y si el proyecto usa labels de estado, marca el issue como listo para QA (ej. `ready-to-test`).
+Once the human owner approves: the CTO merges, and if the project uses status labels, marks the issue as ready for QA (e.g. `ready-to-test`).
 
-## 4. QA/Tester
+## Step 4 — QA/Tester
 
-Ejecuta el test plan del issue contra el código ya mergeado, con evidencia real (ver [qa-tester.md](roles/qa-tester.md)). Si pasa, cierra el issue. Si falla, lo reabre con el detalle del fallo — el ciclo vuelve al paso 1, no se cierra un issue que no pasó su propio test plan.
+Executes the issue's test plan against the already-merged code, with real evidence (see [qa-tester.md](roles/qa-tester.md)). If it passes, closes the issue. If it fails, reopens it with the exact detail of the failure — the cycle returns to step 1. An issue is never closed without passing its own test plan.
 
-## Excepciones
+## Exceptions
 
-Todo el pipeline (incluido el paso 2.5) aplica siempre, salvo instrucción explícita del usuario en sentido contrario para ese caso puntual ("pusheá directo a la rama principal", "no hagas PR", "saltá el plan"). Sin esa instrucción, el flujo completo es la regla, no la excepción.
+The full pipeline (including step 2.5) always applies, unless the human owner gives an explicit instruction to the contrary for that specific case ("push directly to main," "no PR," "skip the plan"). Without that instruction, the full flow is the rule, not the exception.
 
-Roles involucrados: [CTO](roles/cto.md) · [Full Stack Developer](roles/fullstack-developer.md) · [QA/Tester](roles/qa-tester.md) · [UX/UI Designer](roles/ux-ui-designer.md) (consultivo, no bloqueante) · [Tech Lead](roles/tech-lead.md) (opcional, no wireado por default)
+Roles involved: [CTO](roles/cto.md) · [Full Stack Developer](roles/fullstack-developer.md) · [QA/Tester](roles/qa-tester.md) · [UX/UI Designer](roles/ux-ui-designer.md) (advisory, non-blocking) · [Tech Lead](roles/tech-lead.md) (optional, not wired in by default)

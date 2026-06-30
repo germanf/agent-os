@@ -1,29 +1,29 @@
-# Convención: sandboxes aislados por agente
+# Sandbox Convention: Isolated Environments per Agent
 
-Cuando varios agentes de implementación corren en paralelo sobre el mismo repo, necesitan aislarse entre sí para no pisarse archivos, puertos, ni estado. Dos mecanismos complementarios, no mutuamente excluyentes:
+When multiple implementation agents run in parallel on the same repo, they need isolation to avoid stomping on each other's files, ports, and state. Two complementary mechanisms, not mutually exclusive:
 
-## 1. Git worktree por agente
+## 1. Git Worktree per Agent
 
-Cada agente trabaja en su propio `git worktree` (rama propia, directorio propio), no en el checkout principal. Esto evita que dos agentes corriendo a la vez se interfieran con `git checkout`/commits del otro.
+Each agent works in its own `git worktree` (its own branch, its own directory), not in the main checkout. This prevents two concurrent agents from interfering with each other's `git checkout` or commits.
 
-**Riesgo conocido a verificar, no asumir:** algunos mecanismos de "worktree aislado" no garantizan de forma confiable que el agente nunca termine operando sobre el directorio principal compartido. Después de que un agente con aislamiento termina, conviene confirmar con `git worktree list` y `git status` en el directorio principal que efectivamente quedó intacto — no asumirlo por el solo hecho de haber pedido aislamiento.
+**Known risk — verify, do not assume:** some "worktree isolation" mechanisms do not reliably guarantee that the agent never ends up operating on the shared main directory. After an agent with isolation finishes, confirm with `git worktree list` and `git status` in the main directory that it is actually intact — do not assume it just because isolation was requested.
 
-**Orden de limpieza importa:** si además hay un container (sección 2) con bind-mount al worktree, hay que bajar el container *antes* de borrar el worktree — si el worktree desaparece primero, el container puede quedar con procesos colgados apuntando a un directorio que ya no existe.
+**Cleanup order matters:** if there is also a container (see section 2) with a bind-mount to the worktree, stop the container *before* removing the worktree. If the worktree disappears first, the container can be left with hanging processes pointing to a directory that no longer exists.
 
-## 2. Containers Docker por rol, con rangos de puerto fijos
+## 2. Docker Containers per Role, with Fixed Port Ranges
 
-Si el proyecto lo soporta, cada rol corre en su propio container con su propio rango de puertos — evita colisión cuando hay varios agentes activos al mismo tiempo. Ejemplo de convención (los números son ilustrativos, no hay nada especial en ellos — elegí los que tengan sentido para tu setup):
+If the project supports it, each role runs in its own container with its own port range — prevents collisions when multiple agents are active simultaneously. Example convention (numbers are illustrative — choose what makes sense for your setup):
 
-| Rol | Rango de puertos (ejemplo) | Acceso a datos |
+| Role | Port Range (example) | Data Access |
 |---|---|---|
-| Full Stack Developer | 8800-8849 | Read-write código, credenciales mockeadas |
-| QA/Tester | 8850-8899 | Read-only, snapshot de datos (no producción real) |
-| UX/UI Designer | 8900-8949 | Read-write frontend, read-only backend |
+| Full Stack Developer | 8800–8849 | Read-write code, mocked credentials |
+| QA/Tester | 8850–8899 | Read-only, data snapshot (not real production) |
+| UX/UI Designer | 8900–8949 | Read-write frontend, read-only backend |
 
-**Credenciales:** siempre mockeadas dentro del sandbox — nunca credenciales ni datos reales de producción, ni siquiera de solo lectura. El aislamiento de red/puertos no sustituye al aislamiento de datos.
+**Credentials:** always mocked inside the sandbox — never real credentials or production data, not even read-only. Network/port isolation does not substitute for data isolation.
 
-## Cuándo no hace falta esto
+## When This Is Not Needed
 
-Si trabajás con un solo agente a la vez (sin paralelismo real), el worktree por sí solo alcanza para mantener el historial de git limpio — el container Docker es para cuando hay colisión real de puertos/procesos por correr varias cosas a la vez, no un requisito universal.
+If you work with a single agent at a time (no real parallelism), a worktree alone is enough to keep git history clean. Docker containers are for when there is real port/process collision from running multiple things simultaneously — not a universal requirement.
 
-Rol relacionado: [Full Stack Developer](roles/fullstack-developer.md) · [QA/Tester](roles/qa-tester.md)
+Related roles: [Full Stack Developer](roles/fullstack-developer.md) · [QA/Tester](roles/qa-tester.md)
