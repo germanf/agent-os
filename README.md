@@ -1,20 +1,21 @@
 # agent-os
 
-Entorno genérico para desarrollo de software asistido por agentes de IA (Claude Code) — no atado a ningún dominio o proyecto específico.
+A generic environment for AI-assisted software development with Claude Code — not tied to any specific domain or project.
 
-Extraído de un proyecto privado (dashboard de Twitter) que lo usaba internamente. Esta es la parte reusable: el sistema de roles/workflow de agentes, el patrón de sandbox aislado para ejecución paralela, y dos features de interfaz (`/chat`, `/notes`) pensadas para hablar con Claude Code y navegar notas desde el browser.
+## What it includes
 
-## Qué incluye (en construcción)
+- `specs/` — role definitions (CTO, Full Stack Developer, QA/Tester, UX/UI Designer), the development pipeline (issue → plan → PR → review → merge → QA), and sandbox isolation conventions.
+- `sandbox/` — scripts to run agents in isolated Docker containers, with per-role port ranges and access permissions.
+- Self-hosted runner pattern for automatic deployment (config/docs — you bring your own infrastructure; no real runner or VM is included).
+- Interface features (planned): browser-based chat with Claude Code, and a Markdown note browser (Obsidian-compatible).
 
-- `specs/` — definición de roles (CTO, Full Stack Developer, QA/Tester, UX/UI Designer), el pipeline de desarrollo (issue → plan → PR → review → merge → QA), y las convenciones de feedback/memoria entre sesiones.
-- `sandbox/` — scripts para correr agentes en containers Docker aislados, con rangos de puertos y permisos por rol.
-- Patrón de runner self-hosted para deploy automático (config/docs — cada quien levanta su propio runner sobre su propia infra, esto no incluye ningún runner ni VM real).
-- Features de interfaz: chat con Claude Code desde el browser, y browser de notas Markdown (Obsidian-compatible).
+## What it does NOT include
 
-## Qué NO incluye
+Anything specific to any particular project: credentials, personal vaults, domain-specific logic, or real infrastructure. Fork this and wire up your own.
 
-Nada específico del proyecto de origen (Twitter, credenciales, VM, vault personal, suscripción de Claude). Quien haga fork arma su propia infra a partir de los specs.
+## Status
 
-## Estado
-
-Repo recién creado, en proceso de migración de contenido desde el proyecto privado de origen. Todavía privado — la decisión de hacerlo público queda pendiente y separada de esta migración.
+`specs/` — complete (Phase 1).  
+`sandbox/` — complete.  
+Interface features (`/chat`, `/notes`) — planned (Phase 2).  
+Making the repo public — pending, separate decision.
