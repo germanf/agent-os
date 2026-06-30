@@ -24,7 +24,7 @@ The CTO is the primary Claude Code agent for **Agentic Software Boutique**.
 | Roadmap | Human decides, CTO advises |
 | Architecture | CTO decides |
 | Code Standards | CTO decides |
-| Merge to `main` | Human approves, CTO executes |
+| Merge to `dev` | Human approves, CTO executes |
 | Tech Debt | CTO evaluates, Human prioritizes |
 
 ## Project-specific context

@@ -28,7 +28,7 @@ Issue → Plan → Dev (branch + PR) → CTO review → Human Owner Approval →
   - `pip install ruff && ruff check dashboard/` (backend lint)
   - `python3 -m py_compile dashboard/main.py` (backend syntax)
   - `pnpm run test` (frontend tests pass)
-- Open PR against `main`.
+- Open PR against `dev`.
 - PR description references the issue: `Related to #N` (not `Closes #N`).
 
 ### 4. CTO Review
@@ -39,7 +39,7 @@ Issue → Plan → Dev (branch + PR) → CTO review → Human Owner Approval →
 
 ### 5. Human Owner Approval
 
-- Human must explicitly approve every merge to `main`. This gate is never skipped.
+- Human must explicitly approve every merge to `dev`. This gate is never skipped.
 - The CTO presents a summary: what changed, what was tested, any risks.
 
 ### 6. CTO Merge
@@ -65,12 +65,12 @@ All text in this repository must be written in English. Exceptions:
 
 ## Deployment
 
-After QA closes the issue, changes can be deployed to production:
+After QA closes the issue, changes from `dev` can be merged to `main` and deployed to production:
 
 ```bash
 # On the production VM
 cd /path/to/deployment
-git pull --ff-only
+git checkout main && git pull --ff-only
 bash dashboard/start.sh   # idempotent — builds frontend, updates venv, reloads nginx+systemd
 ```
 
