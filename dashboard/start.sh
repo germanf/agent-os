@@ -187,6 +187,19 @@ fi
 
 log "✓ Data directories ready"
 
+# ── Headroom sidecar (context compression) ─────────────────────────────────────
+log "Checking Headroom context compression..."
+if "$VENV_PYTHON" -c "import headroom" 2>/dev/null; then
+  log "✓ headroom-ai is installed"
+  if command -v headroom &>/dev/null; then
+    log "✓ headroom CLI available"
+  else
+    log "⚠ headroom CLI not found in PATH — install via: pip install headroom-ai"
+  fi
+else
+  log "⚠ headroom-ai not installed — context compression disabled"
+fi
+
 # ── HTTP Auth Credentials ───────────────────────────────────────────────────────
 log "Checking HTTP Auth configuration..."
 

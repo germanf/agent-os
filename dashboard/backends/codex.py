@@ -12,6 +12,9 @@ class CodexBackend(ChatBackend):
     def executable(self) -> str:
         return "codex"
 
+    def _proxy_env(self, proxy_url: str) -> dict[str, str]:
+        return {"OPENAI_BASE_URL": f"{proxy_url}/v1"}
+
     def build_command(
         self,
         message: str,

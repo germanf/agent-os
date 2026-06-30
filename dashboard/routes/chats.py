@@ -119,7 +119,8 @@ async def send_message(request: Request, body: ChatSendRequest):
         first=user_msg_count <= 1,
     )
 
-    job = runner.create_job(tool_backend, cmd, cwd=str(BASE_DIR))
+    proxy_env = backend.proxy_env()
+    job = runner.create_job(tool_backend, cmd, cwd=str(BASE_DIR), env=proxy_env or None)
     asyncio.create_task(runner.run_job(job))
 
     return StreamingResponse(runner.stream_logs(job), media_type="text/event-stream")
