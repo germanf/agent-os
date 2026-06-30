@@ -50,17 +50,19 @@ class OpencodeBackend(ChatBackend):
         except (json.JSONDecodeError, TypeError):
             return None
 
-        if evt.get("type") == "text":
+        event_type = evt.get("type")
+
+        if event_type == "text":
             return TextDelta(content=evt.get("content", ""))
 
-        if evt.get("type") == "tool_use":
+        if event_type == "tool_use":
             return ToolUse(
                 id=evt.get("id", ""),
                 name=evt.get("name", ""),
                 input=evt.get("input", {}),
             )
 
-        if evt.get("type") == "result":
+        if event_type == "result":
             return Done()
 
         return None
