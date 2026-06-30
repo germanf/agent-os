@@ -2,16 +2,15 @@
 
 from __future__ import annotations
 
-import logging
 import os
+
+from loguru import logger
 
 from .claude import ClaudeBackend
 from .codex import CodexBackend
 from .kimi import KimiBackend
 from .opencode import OpencodeBackend
 from .protocol import ChatBackend
-
-logger = logging.getLogger(__name__)
 
 _registry: dict[str, ChatBackend] = {}
 

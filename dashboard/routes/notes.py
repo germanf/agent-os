@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, Request
+from loguru import logger
 
 from dashboard.config import VAULT_DIR
 from dashboard.rate_limit import limiter
@@ -40,6 +41,7 @@ async def note_content(request: Request, path: str = ""):
         raise HTTPException(status_code=404, detail="Note not found")
     try:
         content = full_path.read_text(encoding="utf-8")
-    except Exception:
+    except Exception as exc:
+        logger.error("Failed to read note {}: {}", path, exc)
         raise HTTPException(status_code=500, detail="Could not read note")
     return {"content": content, "path": path}

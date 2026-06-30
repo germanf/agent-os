@@ -10,6 +10,8 @@ from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
 from enum import StrEnum
 
+from loguru import logger
+
 
 class Status(StrEnum):
     QUEUED   = "queued"
@@ -125,10 +127,12 @@ async def run_job(job: Job) -> None:
         job.status = Status.DONE if proc.returncode == 0 else Status.FAILED
 
     except asyncio.CancelledError:
+        logger.info("Job {} cancelled", job.id)
         job.status = Status.CANCELLED
         if job._proc:
             job._proc.terminate()
     except Exception as exc:
+        logger.error("Job {} failed: {}", job.id, exc)
         job._log_lines.append(f"[runner error] {exc}")
         job.status = Status.FAILED
     finally:

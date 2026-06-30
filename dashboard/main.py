@@ -6,6 +6,7 @@ from slowapi.errors import RateLimitExceeded
 
 from dashboard import chat_store
 from dashboard.config import FRONTEND_DIST
+from dashboard.log import configure_logging
 from dashboard.middleware.auth import AuthMiddleware
 from dashboard.middleware.hsts import HSTSHeaderMiddleware
 from dashboard.rate_limit import limiter
@@ -34,6 +35,7 @@ app.include_router(diagnostics_router)
 
 @app.on_event("startup")
 async def startup():
+    configure_logging()
     await chat_store.init_db()
 
 

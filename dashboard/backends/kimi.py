@@ -2,11 +2,7 @@
 
 from __future__ import annotations
 
-import logging
-
 from .protocol import ChatBackend, NormalizedEvent
-
-logger = logging.getLogger(__name__)
 
 
 class KimiBackend(ChatBackend):

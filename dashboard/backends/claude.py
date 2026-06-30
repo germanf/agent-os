@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import logging
 
 from .protocol import (
     AssistantMessage,
@@ -13,8 +12,6 @@ from .protocol import (
     TextDelta,
     ToolResult,
 )
-
-logger = logging.getLogger(__name__)
 
 
 class ClaudeBackend(ChatBackend):
