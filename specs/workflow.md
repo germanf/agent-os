@@ -59,9 +59,16 @@ Issue → Plan → Dev (branch + PR) → CTO review → Human Owner Approval →
 
 ## Language rule
 
-All text in this repository must be written in English. Exceptions:
-- User-facing strings in the dashboard UI (which are in Spanish for the target audience)
-- Documentation files explicitly marked as Spanish (`docs/README.md`)
+All project artifacts MUST be written in English. This includes, without exception:
+- Issue titles, descriptions, and comments
+- PR titles, descriptions, comments, and reviews
+- Commit messages
+- Documentation (code comments, ADRs, guides, specs)
+- Labels, milestones, and project board items
+
+The only exception is user-facing strings in the dashboard UI, which may be translated for the target audience.
+
+Internal communication between team members (this chat, voice calls) may use any language.
 
 ## Deployment
 
