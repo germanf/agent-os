@@ -23,10 +23,10 @@
   },
   "agent": {
     "build": {
-      "model": "nvidia/deepseek-ai/deepseek-v4-pro"
+      "model": "nvidia/minimaxai/minimax-m3"
     },
     "plan": {
-      "model": "nvidia/deepseek-ai/deepseek-v4-pro"
+      "model": "nvidia/minimaxai/minimax-m3"
     },
     "explore": {
       "mode": "subagent",
@@ -34,7 +34,7 @@
     },
     "general": {
       "mode": "subagent",
-      "model": "nvidia/deepseek-ai/deepseek-v4-pro"
+      "model": "nvidia/minimaxai/minimax-m3"
     },
     "scout": {
       "mode": "subagent",
