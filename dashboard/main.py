@@ -8,6 +8,7 @@ from dashboard import chat_store
 from dashboard.approvals import init_approvals
 from dashboard.checkpoints import CheckpointStore, init_checkpoints
 from dashboard.config import FRONTEND_DIST
+from dashboard.cron_loop import start as start_cron_loop
 from dashboard.headroom_sidecar import start as start_headroom
 from dashboard.hermes_adapter import init_kanban
 from dashboard.kanban_feedback import start as start_kanban_feedback
@@ -19,6 +20,7 @@ from dashboard.routes.agents import router as agents_router
 from dashboard.routes.approvals import router as approvals_router
 from dashboard.routes.backends import router as backends_router
 from dashboard.routes.chats import router as chats_router
+from dashboard.routes.cron import router as cron_router
 from dashboard.routes.diagnostics import router as diagnostics_router
 from dashboard.routes.hermes_webhook import router as hermes_webhook_router
 from dashboard.routes.jobs import router as jobs_router
@@ -44,6 +46,7 @@ app.include_router(chats_router)
 app.include_router(diagnostics_router)
 app.include_router(approvals_router)
 app.include_router(hermes_webhook_router)
+app.include_router(cron_router)
 
 
 @app.on_event("startup")
@@ -55,6 +58,7 @@ async def startup():
     await init_approvals()
     await init_checkpoints()
     start_kanban_feedback()
+    start_cron_loop()
     store = CheckpointStore()
     orphaned = await store.mark_orphans()
     if orphaned:
