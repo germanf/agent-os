@@ -6,6 +6,7 @@ from slowapi.errors import RateLimitExceeded
 
 from dashboard import chat_store
 from dashboard.approvals import init_approvals
+from dashboard.checkpoints import CheckpointStore, init_checkpoints
 from dashboard.config import FRONTEND_DIST
 from dashboard.headroom_sidecar import start as start_headroom
 from dashboard.hermes_adapter import init_kanban
@@ -52,7 +53,13 @@ async def startup():
     await chat_store.init_db()
     await init_kanban()
     await init_approvals()
+    await init_checkpoints()
     start_kanban_feedback()
+    store = CheckpointStore()
+    orphaned = await store.mark_orphans()
+    if orphaned:
+        from loguru import logger as _logger
+        _logger.info("Marked {} job checkpoints as orphans on startup", orphaned)
 
 
 if (FRONTEND_DIST / "assets").exists():

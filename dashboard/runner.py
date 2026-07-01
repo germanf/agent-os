@@ -191,4 +191,22 @@ async def cancel_job(job_id: str) -> bool:
         job.status = Status.CANCELLED
         job.ended_at = time.time()
         return True
+
+
+def checkpoint_job(job_id: str) -> dict | None:
+    job = _jobs.get(job_id)
+    if not job:
+        return None
+    return {
+        "id": job.id,
+        "tool": job.tool,
+        "command": job.command,
+        "cwd": job.cwd,
+        "env": job.env,
+        "status": job.status,
+        "exit_code": job.exit_code,
+        "started_at": job.started_at,
+        "ended_at": job.ended_at,
+        "logs": list(job._log_lines),
+    }
     return False
