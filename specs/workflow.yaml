@@ -53,6 +53,8 @@ stages:
       - python3 -m py_compile dashboard/main.py passes
       - pnpm run build passes
       - pnpm run test passes
+      - unit tests written for new/modified code
+      - bilingual documentation (EN + ES) written with identical structure
       - PR references issue via "Related to #N"
       - PR targets dev
 
@@ -99,6 +101,7 @@ stages:
       - pass: verification comment with evidence, close issue
       - fail: reopen with reproduction steps, increment counter
       - fail >= max_retries: escalate to CTO + Advisory
+      - end-to-end tests pass (if applicable)
 
   - id: close
     description: "QA closes the issue"

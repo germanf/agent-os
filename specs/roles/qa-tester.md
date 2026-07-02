@@ -12,11 +12,12 @@ Validates merged PRs against the test plan with real evidence.
 ## Process
 
 - **Passes**: Comment with exact verification detail and close the issue:
-  - What was tested
+  - What was tested (unit, integration, E2E as applicable)
   - Steps performed
   - Expected vs actual results
   - Evidence (screenshots, logs, test output)
 - **Fails**: Exact failure detail with reproduction steps; issue reopens
+- **E2E tests**: include end-to-end testing in the test plan when features span multiple layers (API → frontend → persistence)
 
 ## QA Loop (Retry Protocol)
 

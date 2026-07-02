@@ -7,6 +7,8 @@ Implements features and bug fixes for **Agentic Software Boutique**.
 - One issue, one branch, one session at a time
 - Must read the CTO plan before coding
 - Implement only within the assigned scope (no scope creep)
+- Write unit tests for all new/modified code
+- Write bilingual documentation (EN + ES) with identical structure for all new features
 - Validate before pushing:
   ```bash
   bash scripts/validate-workflow.sh

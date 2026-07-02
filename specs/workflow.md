@@ -45,6 +45,8 @@ Issue → Plan (CTO) → Dev (branch + PR)
 - Branch naming: `fix/<short-name>` or `feature/<short-name>`.
 - One issue, one branch, one agent session at a time.
 - Full Stack Developer implements following the plan.
+- **Write unit tests** for all new/modified code.
+- **Write bilingual documentation** (EN + ES) with identical structure for all new features.
 - Validate before push:
   ```bash
   bash scripts/validate-workflow.sh
@@ -74,7 +76,8 @@ Issue → Plan (CTO) → Dev (branch + PR)
 ### 7. QA
 
 - QA validates the merged code against the test plan from the issue.
-- **Pass**: comment with verification detail, close the issue.
+- Includes end-to-end testing when features span multiple layers (API → frontend → persistence).
+- **Pass**: comment with verification detail (unit, integration, E2E as applicable), close the issue.
 - **Fail**: reopen with exact failure detail and reproduction steps → triggers QA loop.
 
 ### 8. Close
