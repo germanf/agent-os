@@ -4,21 +4,37 @@
 *.key
 *.pem
 
-# Local Claude Code settings (per-machine permissions, not project source)
+# Local Claude Code settings
 .claude/
 
 # Python
 __pycache__/
 *.pyc
 .venv/
+.venv*/
 venv/
+.ruff_cache/
 
 # Node
 node_modules/
 dist/
+
+# IDE
+.vscode/
+.idea/
 
 # OS
 .DS_Store
 
 # Logs
 *.log
+deploy.log
+
+# Runtime data
+dashboard/data/
+
+# Docker
+.docker-compose.*.yml
+
+# Test venv
+tests/test_venv*/

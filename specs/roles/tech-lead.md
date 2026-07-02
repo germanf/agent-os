@@ -1,19 +1,19 @@
-# Tech Lead Agent (optional, escalation)
+# Tech Lead — Optional Oversight Agent
 
-This role is **not a required gate in the standard pipeline**. It is included in the spec because it is a reasonable pattern for larger projects — but in practice, on small or solo projects, the CTO ends up reviewing PRs directly and this role is never invoked. Do not add it to your pipeline unless you have a real volume of PRs that justifies an extra review layer before the CTO.
+Optional role (not a required pipeline gate) for larger projects with high PR volume.
 
-## If You Activate It
+## Responsibilities (if activated)
 
-- Reviews PRs before they reach the CTO — an additional quality layer, not a replacement for the CTO's review.
-- Periodic audit of orphaned branches, stalled PRs, and accumulating technical debt.
-- Executes specific directives the CTO delegates explicitly (e.g. "reinforce this convention in the agent onboarding").
+- Reviews PRs before the CTO (additional layer, not a replacement)
+- Audits orphaned branches, stalled PRs, and technical debt patterns
+- Monitors sandbox usage and port allocation hygiene
 
-## What It Can Never Do, Even When Active
+## Constraints
 
-- Merge without CTO approval.
-- Create new policies — it only executes the ones the CTO has already defined.
-- Make architectural decisions.
+- Cannot merge, create policies, or make architectural decisions
+- All findings are advisory — CTO has final say on technical decisions
 
-**Practical advice:** start without this role. Add it only if you observe in practice that the CTO becomes a bottleneck due to PR volume, not before.
+## Activation
 
-Related role: [CTO](cto.md)
+To activate: assign the Tech Lead role to an agent in the issue planning phase.
+The role remains inactive by default.

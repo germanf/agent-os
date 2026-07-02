@@ -1,0 +1,44 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "opencode/big-pickle",
+  "instructions": ["AGENTS.md"],
+  "plugin": ["@dietrichgebert/ponytail"],
+  "references": {
+    "docs": {
+      "path": "docs",
+      "description": "Architecture, API, DB schema, ops documentation"
+    },
+    "frontend": {
+      "path": "dashboard/frontend/src",
+      "description": "React SPA source code"
+    },
+    "backend": {
+      "path": "dashboard",
+      "description": "FastAPI backend source code"
+    },
+    "specs": {
+      "path": "specs",
+      "description": "Agent role definitions and development workflow"
+    }
+  },
+  "agent": {
+    "build": {
+      "model": "nvidia/minimaxai/minimax-m3"
+    },
+    "plan": {
+      "model": "nvidia/minimaxai/minimax-m3"
+    },
+    "explore": {
+      "mode": "subagent",
+      "model": "nvidia/deepseek-ai/deepseek-v4-flash"
+    },
+    "general": {
+      "mode": "subagent",
+      "model": "nvidia/minimaxai/minimax-m3"
+    },
+    "scout": {
+      "mode": "subagent",
+      "model": "nvidia/minimaxai/minimax-m3"
+    }
+  }
+}

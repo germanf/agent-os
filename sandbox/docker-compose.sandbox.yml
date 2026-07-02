@@ -1,0 +1,73 @@
+version: '3.9'
+
+# docker-compose.sandbox.yml - Template for isolated agent sandboxes
+# This file is parametrized by sandbox-up.sh and should not be edited directly
+
+services:
+  claude-sandbox:
+    # Image will be built or pulled by sandbox-up.sh
+    image: claude-sandbox:latest
+    container_name: "claude-sandbox-${AGENT_ID:-default}"
+
+    # Parametrized environment variables
+    environment:
+      PORT: "${PORT:-8765}"
+      ROLE: "${ROLE:-fullstack}"
+      AGENT_ID: "${AGENT_ID:-default}"
+      ENVIRONMENT: "sandbox"
+
+    # Volumes:
+    # - Bind-mount git worktree to /app (read-write)
+    # - Named volume for .venv (isolated Python environment)
+    # - Named volume for node_modules (isolated Node dependencies)
+    volumes:
+      # Git worktree bind-mount (set by sandbox-up.sh)
+      - "${WORKTREE_PATH:-.}:/app:rw"
+
+      # Named volumes for isolated environments
+      - venv-${AGENT_ID:-default}:/app/.venv
+      - node-modules-${AGENT_ID:-default}:/app/node_modules
+
+    # Network configuration (isolated per agent)
+    networks:
+      - sandbox-${ROLE:-default}
+
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "agent=${AGENT_ID:-default},role=${ROLE:-fullstack}"
+
+    # Resource limits (optional for Phase 1)
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: '1.0'
+    #       memory: 2G
+
+    # Keep container running if no command is specified
+    stdin_open: true
+    tty: true
+
+    # No ports exposed at compose level - sandbox-up.sh handles port binding
+    # ports will be added dynamically via environment substitution
+
+networks:
+  sandbox-fullstack:
+    driver: bridge
+    name: sandbox-fullstack
+  sandbox-qa:
+    driver: bridge
+    name: sandbox-qa
+  sandbox-ui:
+    driver: bridge
+    name: sandbox-ui
+  sandbox-default:
+    driver: bridge
+    name: sandbox-default
+
+volumes:
+  # Named volume templates - specific instances created by docker-compose
+  # Pattern: venv-{AGENT_ID} and node-modules-{AGENT_ID}
