@@ -23,6 +23,7 @@ class KimiBackend(ChatBackend):
         project: dict | None = None,
         file_paths: list[str] | None = None,
         context_dirs: list[str] | None = None,
+        mcp_manifest: str | None = None,
     ) -> list[str]:
         raise NotImplementedError("Kimi backend is not yet implemented")
 

@@ -32,6 +32,7 @@ class ClaudeBackend(ChatBackend):
         project: dict | None = None,
         file_paths: list[str] | None = None,
         context_dirs: list[str] | None = None,
+        mcp_manifest: str | None = None,
     ) -> list[str]:
         if file_paths:
             file_list = "\n".join(file_paths)
@@ -45,8 +46,13 @@ class ClaudeBackend(ChatBackend):
             "--permission-mode", "bypassPermissions",
         ]
 
+        system_parts = []
         if project is not None and project.get("system_prompt"):
-            cmd += ["--append-system-prompt", project["system_prompt"]]
+            system_parts.append(project["system_prompt"])
+        if mcp_manifest:
+            system_parts.append(mcp_manifest)
+        for part in system_parts:
+            cmd += ["--append-system-prompt", part]
 
         for folder in (project or {}).get("folders", []):
             if folder.get("path"):
