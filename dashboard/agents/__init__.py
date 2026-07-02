@@ -1,9 +1,11 @@
+from .hermes_agent import HermesAgent
 from .opencode_agent import OpencodeAgent, is_server_available, start_server, stop_server
 from .protocol import (
     AgentCapability,
     AgentContext,
     AgentResult,
     DeveloperCapability,
+    OrchestratorCapability,
     QACapability,
     ReviewerCapability,
 )
@@ -35,7 +37,9 @@ __all__ = [
     "AgentContext",
     "AgentResult",
     "DeveloperCapability",
+    "HermesAgent",
     "OpencodeAgent",
+    "OrchestratorCapability",
     "QACapability",
     "ReviewerCapability",
     "get_agent",
@@ -46,6 +50,8 @@ __all__ = [
     "stop_server",
 ]
 
+
 # ── Auto-register known agents ──────────────────────────────────────────
 
 register_agent(OpencodeAgent())
+register_agent(HermesAgent())
