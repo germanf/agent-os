@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { IconMenu } from "./icons";
+import Breadcrumbs from "./Breadcrumbs";
 
 const NAV_ITEMS = [
-  { to: "/", label: "Inicio" },
+  { to: "/", label: "Home" },
+  { to: "/dashboard", label: "Dashboard" },
   { to: "/notes", label: "Notes" },
   { to: "/chat", label: "Chat" },
   { to: "/orchestrator", label: "Orchestrator" },
@@ -62,6 +64,7 @@ export default function Layout() {
           isChatRoute ? "overflow-hidden" : "overflow-y-auto"
         }`}
       >
+        {!isChatRoute && <Breadcrumbs />}
         <Outlet />
       </main>
     </>
