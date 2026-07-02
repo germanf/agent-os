@@ -38,3 +38,6 @@ dashboard/data/
 
 # Test venv
 tests/test_venv*/
+
+# Project temp (sandbox runtime artifacts, compose files, logs)
+tmp/
