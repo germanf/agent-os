@@ -80,6 +80,8 @@ bash dashboard/start.sh   # idempotent: builds frontend, creates venv, configure
 
 ## Conventions
 
+- **Temporary files**: ALWAYS use `tmp/` (project root) — **never** `/tmp/`, `/dev/shm/`, or any system temp. This is **non-negotiable**: system temp dirs are outside the project, invisible to git, don't get cleaned up by project scripts, and create reproducibility issues. `tmp/` is gitignored, project-scoped, and cleaned by `git clean`. If you used `/tmp/` for anything, it's a bug — move it.
+
 - **Tailwind v4**: CSS-first config via `@theme` in `index.css` (no `tailwind.config.ts`). Dark theme: `--color-bg: #0d1117`, `--color-surface: #161b22`, `--color-accent: #7C3AED`.
 - **Secrets**: `dashboard/.credentials.json` and `.env` files (all gitignored, chmod 0600). Never hardcode, log, or commit real credentials.
 - **Secrets masking**: API secrets sent back from `/api/credentials` are masked as `••••••••`; the POST endpoint preserves existing values when masked is submitted.
