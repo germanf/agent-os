@@ -15,6 +15,8 @@ NC='\033[0m' # No Color
 # Script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SANDBOX_ROOT="$(dirname "$SCRIPT_DIR")"
+PROJECT_ROOT="$(dirname "$SANDBOX_ROOT")"
+TMP_DIR="$PROJECT_ROOT/tmp"
 
 # Parameters
 AGENT_ID="${1:-}"
@@ -36,7 +38,7 @@ trap cleanup SIGINT SIGTERM
 echo -e "${YELLOW}Tearing down sandbox for agent: $AGENT_ID${NC}"
 
 # Find docker-compose file for this agent
-COMPOSE_FILE="$SANDBOX_ROOT/.docker-compose.${AGENT_ID}.yml"
+COMPOSE_FILE="$TMP_DIR/.docker-compose.${AGENT_ID}.yml"
 
 if [[ ! -f "$COMPOSE_FILE" ]]; then
   echo -e "${YELLOW}Warning: Compose file not found at $COMPOSE_FILE${NC}"

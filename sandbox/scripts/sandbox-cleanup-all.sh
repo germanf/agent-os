@@ -15,6 +15,8 @@ NC='\033[0m' # No Color
 # Script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SANDBOX_ROOT="$(dirname "$SCRIPT_DIR")"
+PROJECT_ROOT="$(dirname "$SANDBOX_ROOT")"
+TMP_DIR="$PROJECT_ROOT/tmp"
 
 echo -e "${YELLOW}========================================${NC}"
 echo -e "${YELLOW}Global Sandbox Cleanup${NC}"
@@ -59,11 +61,11 @@ done
 # Cleanup any orphaned compose files
 echo ""
 echo -e "${YELLOW}Checking for orphaned compose files...${NC}"
-ORPHANED_COMPOSE=$(find "$SANDBOX_ROOT" -name ".docker-compose.*.yml" -type f 2>/dev/null | wc -l)
+ORPHANED_COMPOSE=$(find "$TMP_DIR" -name ".docker-compose.*.yml" -type f 2>/dev/null | wc -l)
 
 if [[ $ORPHANED_COMPOSE -gt 0 ]]; then
   echo -e "${YELLOW}Found $ORPHANED_COMPOSE orphaned compose file(s)${NC}"
-  find "$SANDBOX_ROOT" -name ".docker-compose.*.yml" -type f -exec rm -f {} \;
+  find "$TMP_DIR" -name ".docker-compose.*.yml" -type f -exec rm -f {} \;
   echo -e "${GREEN}Removed orphaned compose files${NC}"
 fi
 

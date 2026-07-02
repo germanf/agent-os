@@ -16,6 +16,8 @@ NC='\033[0m' # No Color
 # Script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SANDBOX_ROOT="$(dirname "$SCRIPT_DIR")"
+PROJECT_ROOT="$(dirname "$SANDBOX_ROOT")"
+TMP_DIR="$PROJECT_ROOT/tmp"
 
 # Parameters
 ROLE="${1:-}"
@@ -80,7 +82,7 @@ if [[ $STARTUP_RESULT -ne 0 ]]; then
 fi
 
 # Get the port that was assigned
-COMPOSE_FILE="$SANDBOX_ROOT/.docker-compose.${AGENT_ID}.yml"
+COMPOSE_FILE="$TMP_DIR/.docker-compose.${AGENT_ID}.yml"
 if [[ ! -f "$COMPOSE_FILE" ]]; then
   echo -e "${RED}Error: Compose file not found after startup${NC}"
   exit 1

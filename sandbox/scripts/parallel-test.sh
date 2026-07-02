@@ -16,6 +16,8 @@ NC='\033[0m' # No Color
 # Script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SANDBOX_ROOT="$(dirname "$SCRIPT_DIR")"
+PROJECT_ROOT="$(dirname "$SANDBOX_ROOT")"
+TMP_DIR="$PROJECT_ROOT/tmp"
 
 # Get working directory for worktree
 WORKTREE_PATH="$(cd "$SANDBOX_ROOT/../.." && pwd)"
@@ -124,9 +126,9 @@ fi
 echo ""
 
 # Extract ports
-FULLSTACK_PORT=$(grep -oP "127\.0\.0\.1:\K\d+" "$SANDBOX_ROOT/.docker-compose.${FULLSTACK_AGENT}.yml" | head -1)
-QA_PORT=$(grep -oP "127\.0\.0\.1:\K\d+" "$SANDBOX_ROOT/.docker-compose.${QA_AGENT}.yml" | head -1)
-UI_PORT=$(grep -oP "127\.0\.0\.1:\K\d+" "$SANDBOX_ROOT/.docker-compose.${UI_AGENT}.yml" | head -1)
+FULLSTACK_PORT=$(grep -oP "127\.0\.0\.1:\K\d+" "$TMP_DIR/.docker-compose.${FULLSTACK_AGENT}.yml" | head -1)
+QA_PORT=$(grep -oP "127\.0\.0\.1:\K\d+" "$TMP_DIR/.docker-compose.${QA_AGENT}.yml" | head -1)
+UI_PORT=$(grep -oP "127\.0\.0\.1:\K\d+" "$TMP_DIR/.docker-compose.${UI_AGENT}.yml" | head -1)
 
 echo -e "${GREEN}Ports assigned:${NC}"
 echo -e "${GREEN}  Fullstack: $FULLSTACK_PORT (8800-8849)${NC}"

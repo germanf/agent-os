@@ -15,6 +15,8 @@ NC='\033[0m' # No Color
 # Script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SANDBOX_ROOT="$(dirname "$SCRIPT_DIR")"
+PROJECT_ROOT="$(dirname "$SANDBOX_ROOT")"
+TMP_DIR="$PROJECT_ROOT/tmp"
 
 # Parameters
 ROLE="${1:-}"
@@ -69,7 +71,7 @@ echo -e "${GREEN}Selected port: $PORT${NC}"
 
 # Step 3: Generate docker-compose.yml with port binding
 echo -e "${YELLOW}Step 3: Generating docker-compose configuration...${NC}"
-COMPOSE_FILE="$SANDBOX_ROOT/.docker-compose.${AGENT_ID}.yml"
+COMPOSE_FILE="$TMP_DIR/.docker-compose.${AGENT_ID}.yml"
 
 # Create temporary compose file with port binding
 cat > "$COMPOSE_FILE" << EOF
