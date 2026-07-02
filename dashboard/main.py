@@ -18,6 +18,11 @@ from dashboard.health import registry
 from dashboard.hermes_adapter import init_kanban, install_platform_skills
 from dashboard.kanban_feedback import start as start_kanban_feedback
 from dashboard.log import configure_logging
+from dashboard.mcp.server import registry as mcp_registry
+from dashboard.mcp.servers.kanban import KanbanMCPServer
+from dashboard.mcp.servers.memory import MemoryMCPServer
+from dashboard.mcp.servers.notes import NotesMCPServer
+from dashboard.mcp.servers.workflows import WorkflowsMCPServer
 from dashboard.memory import init_memory
 from dashboard.middleware.auth import AuthMiddleware
 from dashboard.middleware.hsts import HSTSHeaderMiddleware
@@ -33,6 +38,7 @@ from dashboard.routes.diagnostics import router as diagnostics_router
 from dashboard.routes.hermes_webhook import router as hermes_webhook_router
 from dashboard.routes.jobs import router as jobs_router
 from dashboard.routes.kanban import router as kanban_router
+from dashboard.routes.mcp import router as mcp_router
 from dashboard.routes.notes import router as notes_router
 from dashboard.routes.orchestrator import router as orchestrator_router
 from dashboard.routes.projects import router as projects_router
@@ -60,6 +66,7 @@ app.include_router(chats_router)
 app.include_router(diagnostics_router)
 app.include_router(alerts_router)
 app.include_router(orchestrator_router)
+app.include_router(mcp_router)
 app.include_router(approvals_router)
 app.include_router(hermes_webhook_router)
 app.include_router(cron_router)
@@ -78,6 +85,10 @@ async def startup():
     await init_approvals()
     await init_checkpoints()
     await init_memory()
+    mcp_registry.register(MemoryMCPServer())
+    mcp_registry.register(NotesMCPServer())
+    mcp_registry.register(KanbanMCPServer())
+    mcp_registry.register(WorkflowsMCPServer())
     register_health_checks()
     health_results = await registry.run_all()
     for hc in health_results:

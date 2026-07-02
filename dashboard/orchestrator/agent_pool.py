@@ -3,6 +3,7 @@ from dataclasses import dataclass
 
 from loguru import logger
 
+from dashboard.backends import get as get_backend
 from dashboard.backends import list_all_registered
 from dashboard.backends.protocol import ChatBackend
 
@@ -25,17 +26,18 @@ class AgentPool:
         self._refresh()
 
     def _refresh(self):
-        for b in list_all_registered():
-            name = b.name
+        for name in list_all_registered():
             if name not in self._agents:
-                available = b.validate_available()
+                backend = get_backend(name)
+                available = backend is not None and backend.validate_available()
                 self._agents[name] = AgentProfile(
                     agent_type=name,
                     capabilities=["coding", "chat"],
                     available=available,
                     health_status="healthy" if available else "unavailable",
                 )
-                self._backends[name] = b
+                if backend:
+                    self._backends[name] = backend
 
     def register(self, backend: ChatBackend):
         name = backend.name

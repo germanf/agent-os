@@ -7,6 +7,7 @@ const NAV_ITEMS = [
   { to: "/notes", label: "Notes" },
   { to: "/chat", label: "Chat" },
   { to: "/orchestrator", label: "Orchestrator" },
+  { to: "/mcp", label: "MCP" },
 ];
 
 export default function Layout() {
