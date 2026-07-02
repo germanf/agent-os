@@ -23,6 +23,42 @@ Agents run in isolated Docker containers with role-based port ranges:
 - Cleanup order: stop container FIRST, then remove worktree.
 - Single-agent projects may only need worktree isolation.
 
+## 3. Project `tmp/` Directory
+
+All sandbox runtime artifacts (docker-compose files, logs) are written to
+`<project-root>/tmp/`, which is gitignored. Never use system `/tmp/` or any
+other directory outside the project for sandbox instances.
+
+**Path resolution**: scripts compute `PROJECT_ROOT` as `$(dirname $SANDBOX_ROOT)`
+(sandbox/ → project root) and set `TMP_DIR=$PROJECT_ROOT/tmp`.
+
+## 4. Cleanup Lifecycle
+
+The sandbox lifecycle follows:
+
+```
+sandbox-up.sh  →  sandbox-test.sh  →  [PR merged to dev]  →  sandbox-cleanup.sh
+```
+
+### Stages
+
+1. **sandbox-up.sh** — Builds Docker image, picks port, generates compose file
+   in `tmp/`, starts container, runs CI checks.
+2. **sandbox-test.sh** — Runs full test suite (startup, CI, endpoints, volumes,
+   port range, cleanup).
+3. **PR merged to dev** — After human approval and CTO merge of the feature PR.
+4. **sandbox-cleanup.sh** — Verifies PR merge status via `gh pr view`, then tears
+   down container, volumes, and compose file from `tmp/`.
+
+### Usage
+
+```bash
+# Full lifecycle with PR-gated cleanup
+sandbox-up.sh qa agent-001 && \
+sandbox-test.sh qa agent-001 && \
+sandbox-cleanup.sh agent-001 54
+```
+
 ## Implementation
 
 This project's sandbox implementation lives in `sandbox/`.

@@ -28,6 +28,10 @@ sandbox/
 │   ├── pick-port.sh            # Find available port in role range
 │   ├── sandbox-up.sh           # Start container + CI checks
 │   ├── sandbox-down.sh         # Stop container + cleanup
+│   ├── sandbox-cleanup.sh      # Post-PR-merge cleanup (PR-gated)
+│   ├── sandbox-cleanup-all.sh  # Global cleanup of all sandboxes
+│   ├── sandbox-test.sh         # Single agent validation
+│   ├── parallel-test.sh        # Multi-agent parallel validation
 │   ├── ci-checks.sh            # Validation checks (TypeScript, Python)
 │   └── entrypoint.sh           # uvicorn startup script
 │
@@ -35,6 +39,9 @@ sandbox/
     ├── credentials.dashboard.mock.json
     ├── env.dashboard.mock
     └── ~~env.agentic-twitter-claude.mock~~ (removed)
+
+tmp/                              # Runtime artifacts (gitignored)
+└── .docker-compose.<agent>.yml  # Generated compose files
 ```
 
 ### Port Ranges by Role
@@ -107,6 +114,27 @@ docker logs -f claude-sandbox-agent-001  # Follow logs
 ./sandbox/scripts/sandbox-down.sh agent-001
 ```
 
+## Runtime Artifacts: `tmp/` Directory
+
+Sandbox runtime artifacts (docker-compose files) are stored in `<project-root>/tmp/`,
+which is gitignored. Never use system `/tmp/` for sandbox instances.
+
+**Path resolution:** Each script resolves `PROJECT_ROOT` as `$(dirname $SANDBOX_ROOT)`
+(one level up from `sandbox/`) and writes compose files to `$PROJECT_ROOT/tmp/`.
+
+## Cleanup Lifecycle
+
+After tests pass and the PR is merged to `dev`, run `sandbox-cleanup.sh` to tear down:
+
+```bash
+sandbox-cleanup.sh <AGENT_ID> [PR_NUMBER]
+```
+
+- With `PR_NUMBER`: verifies the PR is merged to `dev` before cleaning up
+- Without `PR_NUMBER`: cleans up immediately
+
+See `specs/sandbox.md` for the full lifecycle specification.
+
 ## Usage Details
 
 ### sandbox-up.sh
@@ -144,7 +172,7 @@ docker logs -f claude-sandbox-agent-001  # Follow logs
 **Behavior:**
 1. Finds and stops container `claude-sandbox-AGENT_ID`
 2. Removes container and named volumes (`.venv`, `node_modules`)
-3. Removes generated `.docker-compose.AGENT_ID.yml`
+3. Removes generated compose file from `tmp/`
 4. Gracefully handles SIGINT/SIGTERM
 5. **Always exits with code 0** (cleanup should not fail the caller)
 
@@ -444,8 +472,8 @@ docker images | grep claude-sandbox
 # Rebuild image if missing
 docker build -f sandbox/Dockerfile.base -t claude-sandbox:latest sandbox/
 
-# Check compose file
-cat .docker-compose.agent-001.yml
+# Check compose file (in tmp/)
+cat tmp/.docker-compose.agent-001.yml
 ```
 
 ### CI Checks Failing
