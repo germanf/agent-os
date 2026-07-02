@@ -3,6 +3,7 @@ import Layout from "./components/Layout";
 import Landing from "./pages/Landing";
 import Notes from "./pages/Notes";
 import Chat from "./pages/Chat";
+import OrchestratorView from "./pages/OrchestratorView";
 
 export default function App() {
   return (
@@ -12,6 +13,7 @@ export default function App() {
         <Route path="notes" element={<Notes />} />
         <Route path="chat" element={<Chat />} />
         <Route path="chat/:chatId" element={<Chat />} />
+        <Route path="orchestrator" element={<OrchestratorView />} />
       </Route>
     </Routes>
   );
