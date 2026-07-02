@@ -31,6 +31,7 @@ from dashboard.routes.projects import router as projects_router
 from dashboard.routes.token_accounting import router as token_accounting_router
 from dashboard.routes.workflows import router as workflows_router
 from dashboard.token_accounting import init_token_accounting
+from dashboard.tracing import TracingMiddleware
 
 app = FastAPI(title="Agentic Software Boutique")
 app.state.limiter = limiter
@@ -39,6 +40,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(AuthMiddleware)
 app.add_middleware(HSTSHeaderMiddleware)
+app.add_middleware(TracingMiddleware)
 
 app.include_router(agents_router)
 app.include_router(jobs_router)
