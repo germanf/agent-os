@@ -66,6 +66,40 @@ async def stream_run(args: list[str], cwd: str | None = None) -> AsyncIterator[s
     await proc.wait()
 
 
+SKILLS_SRC = Path(__file__).parent / "skills"
+HERMES_SKILLS_DIR = Path.home() / ".hermes" / "skills"
+
+
+def install_platform_skills() -> int:
+    """Copy agent-os SKILL.md files to ~/.hermes/skills/.
+
+    Returns number of skills installed (or 0 if Hermes not available).
+    """
+    if not SKILLS_SRC.is_dir():
+        logger.debug("Skills source dir not found: {}", SKILLS_SRC)
+        return 0
+    installed = 0
+    for skill_dir in SKILLS_SRC.iterdir():
+        if not skill_dir.is_dir():
+            continue
+        src = skill_dir / "SKILL.md"
+        if not src.exists():
+            continue
+        dst = HERMES_SKILLS_DIR / skill_dir.name / "SKILL.md"
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        dst.write_text(src.read_text())
+        installed += 1
+        logger.debug("Installed skill: {}", skill_dir.name)
+    if installed:
+        logger.info("Installed {} agent-os skills to {}", installed, HERMES_SKILLS_DIR)
+    return installed
+
+
+async def run_curator() -> tuple[int, str, str]:
+    """Trigger a curator review cycle."""
+    return await run_command(["curator", "run"])
+
+
 async def init_kanban() -> bool:
     if not is_available():
         logger.info("Hermes not available — kanban init skipped")
