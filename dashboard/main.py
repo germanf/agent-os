@@ -13,6 +13,7 @@ from dashboard.headroom_sidecar import start as start_headroom
 from dashboard.hermes_adapter import init_kanban
 from dashboard.kanban_feedback import start as start_kanban_feedback
 from dashboard.log import configure_logging
+from dashboard.memory import init_memory
 from dashboard.middleware.auth import AuthMiddleware
 from dashboard.middleware.hsts import HSTSHeaderMiddleware
 from dashboard.rate_limit import limiter
@@ -59,6 +60,7 @@ async def startup():
     await init_kanban()
     await init_approvals()
     await init_checkpoints()
+    await init_memory()
     start_kanban_feedback()
     start_cron_loop()
     store = CheckpointStore()
