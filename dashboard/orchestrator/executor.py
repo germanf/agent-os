@@ -51,7 +51,8 @@ async def _run_subtask_command(graph_id: str, subtask, command: list[str], cwd: 
     return proc.returncode or 0, "\n".join(output_lines)
 
 
-async def _run_subtask(graph_id: str, subtask, semaphore: asyncio.Semaphore) -> str | None:
+async def _run_subtask(graph_id: str, subtask, semaphore: asyncio.Semaphore,
+                        context: dict[str, str] | None = None) -> str | None:
     if _cancelled.get(graph_id):
         subtask.status = TaskStatus.cancelled
         return None
@@ -154,6 +155,9 @@ async def execute_graph(graph: TaskGraph) -> TaskGraph:
 
     pending = set(graph.subtasks)
 
+    # Context propagation: store completed results keyed by subtask id
+    results: dict[str, str] = {}
+
     while pending and not _cancelled.get(graph_id):
         ready = graph.ready_subtasks()
         ready = [st for st in ready if st in pending]
@@ -167,12 +171,28 @@ async def execute_graph(graph: TaskGraph) -> TaskGraph:
         tasks = []
         for st in ready:
             pending.discard(st)
-            t = asyncio.create_task(_run_subtask(graph_id, st, semaphore))
+            # Build context from completed dependencies
+            context = {}
+            for dep_id in st.depends_on:
+                dep_result = results.get(dep_id)
+                if dep_result is not None:
+                    context[f"SUBTASK_{dep_id}_RESULT"] = dep_result
+            t = asyncio.create_task(_run_subtask(graph_id, st, semaphore, context=context or None))
             _running_tasks[graph_id].add(t)
             tasks.append(t)
 
         done, _ = await asyncio.wait(tasks)
         _running_tasks[graph_id] -= done
+
+        # Collect results from completed subtasks for downstream dependencies
+        for t in done:
+            st_id = None
+            for st in graph.subtasks:
+                if st.status == TaskStatus.completed and st.id not in results:
+                    st_id = st.id
+                    break
+            if st_id and t.result() is not None:
+                results[st_id] = t.result()
 
     if _cancelled.get(graph_id):
         graph.status = TaskStatus.cancelled

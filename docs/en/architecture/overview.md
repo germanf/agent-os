@@ -84,6 +84,9 @@ runner.py     chat_store.py   static files
 |-------|-----------|-------------|
 | `HermesAgent` | OrchestratorCapability | Decomposes goals to kanban tasks, delegates |
 | `OpencodeAgent` | DeveloperCapability | Bug fixes, features, refactoring via OpenCode |
+| `TechLeadAgent` | ReviewerCapability | Automated code review, PR validation |
+| `SecuritySpecialistAgent` | SecurityCapability | Static analysis, dependency audit, vuln issues |
+| `UIUXSpecialistAgent` | UIUXCapability | Design review, accessibility audit |
 
 ## Layer Diagram
 

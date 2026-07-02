@@ -1,0 +1,153 @@
+name: dev-pipeline
+version: 1.0.0
+description: "The sole development pipeline for Agentic Software Boutique"
+
+defaults:
+  max_retries: 3
+  approval_gate: true
+
+roles:
+  cto:
+    description: "Launches agents, verifies workflows, approves PRs, sole PR-to-main authority"
+  tech-lead:
+    description: "Automated Code Review, Security/UI-UX triage, delegation to Dev (mandatory gate)"
+  fullstack-developer:
+    description: "Feature/bugfix implementation"
+  qa-tester:
+    description: "Validation against test plan, QA loop"
+  security-specialist:
+    description: "Pentesting, black box, SAST/DAST, issue creation"
+  ui-ux-specialist:
+    description: "Design/UX review, accessibility audit, issue creation"
+  advisory:
+    description: "Deep architecture review on CTO request (loop exhaustion, complex design)"
+
+stages:
+  - id: issue
+    description: "Issue creation and labeling"
+    agent: any
+    preconditions:
+      - label is one of: bug, feature, security, documentation
+    postconditions:
+      - issue has descriptive title
+      - issue has exactly one label
+
+  - id: plan
+    description: "CTO produces plan in issue"
+    agent: cto
+    preconditions:
+      - issue exists with label
+    postconditions:
+      - issue has CTO plan comment: affected files, approach, risks
+      - for features: wireframe or user-facing change description
+
+  - id: dev
+    description: "Implementation on feature/fix branch"
+    agent: fullstack-developer
+    preconditions:
+      - CTO plan exists in issue
+      - branch matches: fix/* or feature/*
+      - one issue, one branch
+    postconditions:
+      - ruff check dashboard/ passes
+      - python3 -m py_compile dashboard/main.py passes
+      - pnpm run build passes
+      - pnpm run test passes
+      - PR references issue via "Related to #N"
+      - PR targets dev
+
+  - id: tech-lead-review
+    description: "Automated Code Review by Tech Lead"
+    agent: tech-lead
+    preconditions:
+      - PR is open against dev
+      - validate-workflow.sh passes
+    postconditions:
+      - Tech Lead approved or changes requested
+      - if changes: returns to dev stage, re-reviews after amend
+    approval_gate: true
+
+  - id: cto-approval
+    description: "CTO reviews and approves (post Tech Lead)"
+    agent: cto
+    preconditions:
+      - Tech Lead has approved the PR
+    postconditions:
+      - CTO verified: Tech Lead approved, validations pass, PR references issue
+      - Human approved (when required)
+
+  - id: merge-to-dev
+    description: "CTO merges PR to dev, deletes branch"
+    agent: cto
+    preconditions:
+      - CTO approval complete
+      - Human approval complete (when required)
+    postconditions:
+      - PR merged to dev
+      - branch deleted after merge
+
+  - id: qa
+    description: "QA validates against test plan"
+    agent: qa-tester
+    loop:
+      max_retries: 3
+      on_exhaustion: escalate_to_cto_advisory
+    preconditions:
+      - PR merged to dev
+      - issue has test plan
+    postconditions:
+      - pass: verification comment with evidence, close issue
+      - fail: reopen with reproduction steps, increment counter
+      - fail >= max_retries: escalate to CTO + Advisory
+
+  - id: close
+    description: "QA closes the issue"
+    agent: qa-tester
+    preconditions:
+      - QA passed
+      - verification comment posted
+
+  - id: merge-to-main
+    description: "CTO creates PR to main and merges"
+    agent: cto
+    preconditions:
+      - QA passed
+      - issue closed
+    postconditions:
+      - PR from dev to main created by CTO
+      - merge to main
+
+loops:
+  security:
+    description: "Security Specialist creates issue → Tech Lead triages → Dev fixes → Code Review → Merge → Security verifies"
+    initiator: security-specialist
+    triage: tech-lead
+    implementation: fullstack-developer
+    review: tech-lead
+    approval: cto
+    merge: cto
+    verification: security-specialist
+
+  ui-ux:
+    description: "UI/UX Specialist creates issue → Tech Lead triages → Dev fixes → Code Review → Merge → UI/UX verifies"
+    initiator: ui-ux-specialist
+    triage: tech-lead
+    implementation: fullstack-developer
+    review: tech-lead
+    approval: cto
+    merge: cto
+    verification: ui-ux-specialist
+
+escalation:
+  max_retries_exhausted:
+    from: qa-tester
+    to: tech-lead
+    then:
+      - role: cto
+        action: "Produce remediation plan with Advisory"
+      - role: tech-lead
+        action: "Add technical context to plan"
+      - role: fullstack-developer
+        action: "Implement remediation"
+      - role: qa-tester
+        action: "Re-validate"

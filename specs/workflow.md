@@ -2,16 +2,38 @@
 
 The sole development pipeline for **Agentic Software Boutique**.
 
+The authoritative source of truth is `specs/workflow.yaml`. This document describes the pipeline in prose.
+
+## Agent Hierarchy
+
+```
+CTO ── launches agents, verifies workflows, approves PRs (post Tech Lead review),
+│       sole authority for PRs to main
+├── Tech Lead ── requests review loop, automated Code Review, reviews Security/UI-UX
+│                findings, adds technical context, delegates to Dev (mandatory gate)
+├── Full Stack Developer ── implements features/bugfixes
+├── QA/Tester ── validates merged PRs against test plan, reopens on failure
+├── Security Specialist ── pentesting, black box, SAST/DAST → creates Issue with findings
+└── UI/UX Specialist ── design/UX review, accessibility audit → creates Issue with findings
+     ↑
+Advisory ── deep architecture review, only on CTO request (loop exhaustion, complex design)
+```
+
 ## Pipeline stages
 
 ```
-Issue → Plan → Dev (branch + PR) → CTO review → Human Owner Approval → CTO merge → QA → Close
+Issue → Plan (CTO) → Dev (branch + PR)
+→ Tech Lead Code Review (automated, mandatory)
+→ CTO approves → CTO merges to dev
+→ QA → [Pass → CTO PR to main | Fail → loop]
+→ Close
 ```
 
 ### 1. Issue
 
 - Every issue gets exactly one label: `bug`, `feature`, `security`, or `documentation`.
 - The title should be descriptive (not "fix bug" but "Fix file upload payload size validation").
+- Security and UI/UX specialists create issues from their findings.
 
 ### 2. Plan
 
@@ -24,38 +46,70 @@ Issue → Plan → Dev (branch + PR) → CTO review → Human Owner Approval →
 - One issue, one branch, one agent session at a time.
 - Full Stack Developer implements following the plan.
 - Validate before push:
-  - `pnpm run build` (frontend compiles)
-  - `pip install ruff && ruff check dashboard/` (backend lint)
-  - `python3 -m py_compile dashboard/main.py` (backend syntax)
-  - `pnpm run test` (frontend tests pass)
+  ```bash
+  bash scripts/validate-workflow.sh
+  ```
 - Open PR against `dev`.
 - PR description references the issue: `Related to #N` (not `Closes #N`).
 
-### 4. CTO Review
+### 4. Tech Lead Code Review
 
-- CTO reviews every PR: architecture, standards, edge cases, security.
-- If changes requested → Full Stack Developer amends on same branch.
-- CTO marks "Approved" when ready.
+- Tech Lead reviews every PR automatically: architecture, standards, edge cases, security.
+- References `specs/roles/tech-lead.md` for detailed review criteria.
+- If changes requested → Full Stack Developer amends on same branch → re-review.
+- When approved → marks "Tech Lead Approved".
 
-### 5. Human Owner Approval
+### 5. CTO Review & Approval
 
-- Human must explicitly approve every merge to `dev`. This gate is never skipped.
-- The CTO presents a summary: what changed, what was tested, any risks.
+- CTO reviews after Tech Lead approval.
+- Verifies: Tech Lead approved, validate script passed, PR references issue, branch naming correct.
+- Presents summary to human for approval when required.
 
 ### 6. CTO Merge
 
-- After human approval, CTO merges the PR.
+- After human approval (when required), CTO merges the PR to `dev`.
 - Delete the branch after merge.
+- Only CTO may create PRs from `dev` to `main`.
 
 ### 7. QA
 
 - QA validates the merged code against the test plan from the issue.
 - **Pass**: comment with verification detail, close the issue.
-- **Fail**: reopen with exact failure detail and reproduction steps.
+- **Fail**: reopen with exact failure detail and reproduction steps → triggers QA loop.
 
 ### 8. Close
 
 - QA closes the issue after successful validation.
+
+## Orchestration Loops
+
+### QA Loop
+
+```
+QA fails → reopens issue → Tech Lead reviews → delegates to Dev
+→ Dev fixes → re-QA
+→ [Pass → close | Fail → counter++ → if counter >= max_retries → escalate]
+```
+
+- `max_retries` default: 3 (configurable in `specs/workflow.yaml`)
+- On exhaustion: QA escalates to Tech Lead → Tech Lead relays to CTO + Advisory
+- CTO + Advisory produce joint remediation plan → Tech Lead adds technical context → Dev implements → re-QA
+
+### Security Loop
+
+```
+Security Specialist finds vuln → creates Issue
+→ Tech Lead reviews, adds technical context, delegates to Dev
+→ Dev fixes → Tech Lead Code Review → CTO approves → CTO merges → Security verifies → close
+```
+
+### UI/UX Loop
+
+```
+UI/UX Specialist finds issue → creates Issue
+→ Tech Lead reviews, adds technical context, delegates to Dev
+→ Dev fixes → Tech Lead Code Review → CTO approves → CTO merges → UI/UX verifies → close
+```
 
 ## Language rule
 
@@ -86,3 +140,6 @@ See `DEPLOYMENT.md` for detailed deployment guide, firewall rules, and monitorin
 ## Pipeline exceptions
 
 The full pipeline always applies unless the human owner explicitly instructs otherwise in writing (issue comment or direct message).
+
+See `specs/workflow.yaml` for the machine-readable definition.
+See `specs/protocol.md` for agent-to-agent handoff and escalation protocol.

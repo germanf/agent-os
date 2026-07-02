@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+#
+
+set -euo pipefail
+
+# Pre-push hook — runs validate-workflow.sh before every push.
+# Skip with: git push --no-verify
+
+echo "=== pre-push hook ==="
+echo "Branch: $(git rev-parse --abbrev-ref HEAD)"
+echo ""
+
+# Only validate feature/fix branches (skip main/dev direct pushes)
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+case "$BRANCH" in
+  main|dev)
+    echo "Allowed branch ($BRANCH) — skipping validation"
+    exit 0
+    ;;
+esac
+
+if [ -f scripts/validate-workflow.sh ]; then
+    bash scripts/validate-workflow.sh
+else
+    echo "scripts/validate-workflow.sh not found — skipping validation"
+fi
