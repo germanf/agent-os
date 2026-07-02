@@ -3,10 +3,18 @@
 ## Development Workflow
 
 ```
-Issue → Plan → Dev → CTO Review → Human Approval → CTO Merge → QA → Close
+Issue → Plan (CTO) → Dev (branch + PR)
+→ Tech Lead Code Review (mandatory gate)
+→ CTO approves → CTO merges to dev
+→ QA → [Pass → CTO PR to main | Fail → loop]
+→ Close
 ```
 
-See [specs/workflow.md](specs/workflow.md) for complete details.
+See [specs/workflow.md](specs/workflow.md) and [specs/workflow.yaml](specs/workflow.yaml) for complete details.
+
+## Workflow Protocol (Non-negotiable)
+
+The development pipeline is a **machine-enforced protocol** defined in `specs/workflow.yaml`. Every agent must follow the defined stages in order, verify pre/postconditions at each stage, and use the handoff protocol from `specs/protocol.md` for agent-to-agent communication.
 
 ## Branching Strategy
 
@@ -19,18 +27,18 @@ See [specs/workflow.md](specs/workflow.md) for complete details.
 
 1. Create a feature branch from `dev`
 2. Implement your changes
-3. Run lint and typecheck:
+3. **Run validation**:
    ```bash
-   ruff check dashboard/
-   python3 -m py_compile dashboard/main.py
-   cd dashboard/frontend && pnpm run build
+   bash scripts/validate-workflow.sh
    ```
-4. Create a PR to `dev`
-5. CTO reviews and approves
-6. Human approves (when required)
-7. CTO merges
-8. QA validates
-9. Issue is closed
+4. Create a PR to `dev` using the PR template (`.github/PULL_REQUEST_TEMPLATE.md`)
+5. Tech Lead Code Review (mandatory gate)
+6. CTO reviews and approves (after Tech Lead approval)
+7. Human approves (when required)
+8. CTO merges to `dev`
+9. QA validates against test plan
+10. QA passes → CTO creates PR from `dev` to `main`
+11. Issue is closed
 
 ## Commit Conventions
 
@@ -82,6 +90,16 @@ Use only Markdown — no HTML, no GitHub Wiki.
 - Every issue gets exactly one label: `bug`, `feature`, `security`, or `documentation`
 - Include steps to reproduce for bugs
 - Include acceptance criteria for features
+
+## Git Hooks (Mandatory Setup)
+
+After cloning, install the pre-push hook:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+This runs `scripts/validate-workflow.sh` (ruff + py_compile + pnpm build + pnpm test + branch naming) on every push to feature/fix branches. To skip: `git push --no-verify`.
 
 ## Temporary Files
 

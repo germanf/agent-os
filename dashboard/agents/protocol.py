@@ -2,7 +2,69 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
+from enum import StrEnum
 from typing import Any
+
+# ── Handoff Protocol ──────────────────────────────────────────────────
+
+
+class Severity(StrEnum):
+    info = "info"
+    warning = "warning"
+    blocker = "blocker"
+    critical = "critical"
+
+
+class HandoffStatus(StrEnum):
+    accepted = "accepted"
+    rejected = "rejected"
+    redirected = "redirected"
+
+
+@dataclass
+class HandoffRequest:
+    from_role: str
+    to_role: str
+    session_id: str
+    reason: str
+    attempt_count: int = 0
+    context_snapshot: str = ""
+    severity: Severity = Severity.info
+    issue_id: int | None = None
+
+
+@dataclass
+class HandoffResponse:
+    from_role: str
+    to_role: str
+    session_id: str
+    request_id: str
+    status: HandoffStatus = HandoffStatus.accepted
+    notes: str = ""
+
+
+ALLOWED_ROLES = frozenset({
+    "cto",
+    "tech-lead",
+    "fullstack-developer",
+    "qa-tester",
+    "security-specialist",
+    "ui-ux-specialist",
+    "advisory",
+})
+
+
+def validate_handoff(req: HandoffRequest) -> str | None:
+    if req.from_role not in ALLOWED_ROLES:
+        return f"Unknown from_role: {req.from_role}"
+    if req.to_role not in ALLOWED_ROLES:
+        return f"Unknown to_role: {req.to_role}"
+    if not req.reason:
+        return "reason is required"
+    return None
+
+
+# ── Core Protocol ─────────────────────────────────────────────────────
 
 
 @dataclass
@@ -122,3 +184,51 @@ class OrchestratorCapability(AgentCapability):
     @abstractmethod
     async def status(self, workflow_id: str) -> AgentResult:
         """Return the current status of all tasks in a workflow."""
+
+
+class SecurityCapability(AgentCapability):
+    """Pentesting, black-box testing, SAST/DAST, vulnerability auditing."""
+
+    @property
+    def name(self) -> str:
+        return "security-specialist"
+
+    @property
+    def description(self) -> str:
+        return "Penetration testing, security audit, dependency scanning"
+
+    @abstractmethod
+    async def run_static_analysis(self, path: str, context: AgentContext) -> AgentResult:
+        ...
+
+    @abstractmethod
+    async def run_dependency_audit(self, context: AgentContext) -> AgentResult:
+        ...
+
+    @abstractmethod
+    async def create_finding_issue(self, vuln: dict, context: AgentContext) -> AgentResult:
+        ...
+
+
+class UIUXCapability(AgentCapability):
+    """Design system review, accessibility audit, responsive checks."""
+
+    @property
+    def name(self) -> str:
+        return "ui-ux-specialist"
+
+    @property
+    def description(self) -> str:
+        return "Design review, accessibility audit, UI consistency"
+
+    @abstractmethod
+    async def review_design(self, path: str, context: AgentContext) -> AgentResult:
+        ...
+
+    @abstractmethod
+    async def audit_accessibility(self, path: str, context: AgentContext) -> AgentResult:
+        ...
+
+    @abstractmethod
+    async def create_design_issue(self, finding: dict, context: AgentContext) -> AgentResult:
+        ...

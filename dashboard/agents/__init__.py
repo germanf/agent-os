@@ -5,10 +5,20 @@ from .protocol import (
     AgentContext,
     AgentResult,
     DeveloperCapability,
+    HandoffRequest,
+    HandoffResponse,
+    HandoffStatus,
     OrchestratorCapability,
     QACapability,
     ReviewerCapability,
+    SecurityCapability,
+    Severity,
+    UIUXCapability,
+    validate_handoff,
 )
+from .reviewer import TechLeadAgent
+from .security_agent import SecuritySpecialistAgent
+from .uiux_agent import UIUXSpecialistAgent
 
 _registry: dict[str, AgentCapability] = {}
 
@@ -37,17 +47,27 @@ __all__ = [
     "AgentContext",
     "AgentResult",
     "DeveloperCapability",
+    "HandoffRequest",
+    "HandoffResponse",
+    "HandoffStatus",
     "HermesAgent",
     "OpencodeAgent",
     "OrchestratorCapability",
     "QACapability",
     "ReviewerCapability",
+    "SecurityCapability",
+    "SecuritySpecialistAgent",
+    "Severity",
+    "TechLeadAgent",
+    "UIUXCapability",
+    "UIUXSpecialistAgent",
     "get_agent",
     "is_server_available",
     "list_agents",
     "register_agent",
     "start_server",
     "stop_server",
+    "validate_handoff",
 ]
 
 
@@ -55,3 +75,6 @@ __all__ = [
 
 register_agent(OpencodeAgent())
 register_agent(HermesAgent())
+register_agent(TechLeadAgent())
+register_agent(SecuritySpecialistAgent())
+register_agent(UIUXSpecialistAgent())

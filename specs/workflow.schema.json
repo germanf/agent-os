@@ -1,0 +1,121 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "DevWorkflow",
+  "description": "Schema for the Agentic Software Boutique development workflow",
+  "type": "object",
+  "required": ["name", "version", "stages"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Workflow name"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "description": {
+      "type": "string"
+    },
+    "defaults": {
+      "type": "object",
+      "properties": {
+        "max_retries": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 3
+        },
+        "approval_gate": {
+          "type": "boolean",
+          "default": true
+        }
+      }
+    },
+    "roles": {
+      "type": "object",
+      "patternProperties": {
+        "^[a-z-]+$": {
+          "type": "object",
+          "required": ["description"],
+          "properties": {
+            "description": { "type": "string" }
+          }
+        }
+      }
+    },
+    "stages": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "description", "agent"],
+        "properties": {
+          "id": { "type": "string" },
+          "description": { "type": "string" },
+          "agent": { "type": "string" },
+          "preconditions": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "postconditions": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "approval_gate": { "type": "boolean" },
+          "loop": {
+            "type": "object",
+            "properties": {
+              "max_retries": { "type": "integer", "minimum": 0 },
+              "on_exhaustion": {
+                "type": "string",
+                "enum": ["escalate_to_cto_advisory", "fail", "skip"]
+              }
+            }
+          }
+        }
+      }
+    },
+    "loops": {
+      "type": "object",
+      "patternProperties": {
+        "^[a-z-]+$": {
+          "type": "object",
+          "required": ["initiator", "triage", "implementation", "review", "approval", "merge", "verification"],
+          "properties": {
+            "description": { "type": "string" },
+            "initiator": { "type": "string" },
+            "triage": { "type": "string" },
+            "implementation": { "type": "string" },
+            "review": { "type": "string" },
+            "approval": { "type": "string" },
+            "merge": { "type": "string" },
+            "verification": { "type": "string" }
+          }
+        }
+      }
+    },
+    "escalation": {
+      "type": "object",
+      "patternProperties": {
+        "^[a-z_]+$": {
+          "type": "object",
+          "required": ["from", "to"],
+          "properties": {
+            "from": { "type": "string" },
+            "to": { "type": "string" },
+            "then": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["role", "action"],
+                "properties": {
+                  "role": { "type": "string" },
+                  "action": { "type": "string" }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

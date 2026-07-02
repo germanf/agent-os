@@ -23,6 +23,9 @@ class WorkflowStep:
     approval_gate: bool = False
     status: str = "pending"
     result: dict[str, Any] | None = None
+    retry_count: int = 0
+    max_retries: int = 3
+    error: str | None = None
 
 
 @dataclass
@@ -64,14 +67,19 @@ def parse_workflow(source: str | dict[str, Any] | Path) -> WorkflowDef:
     if not parsed or data is None:
         raise ValueError("Workflow must be valid YAML or JSON")
 
+    defaults = data.get("defaults", {})
+    default_max_retries = defaults.get("max_retries", 3)
+
     steps = []
     for i, s in enumerate(data.get("steps", [])):
+        loop_config = s.get("loop", {})
         steps.append(WorkflowStep(
             id=s.get("id", f"step-{i}"),
             description=s.get("description", ""),
             agent=s.get("agent", "developer"),
             depends_on=s.get("depends_on", []),
             approval_gate=s.get("approval_gate", False),
+            max_retries=loop_config.get("max_retries", default_max_retries),
         ))
 
     return WorkflowDef(
@@ -81,7 +89,7 @@ def parse_workflow(source: str | dict[str, Any] | Path) -> WorkflowDef:
     )
 
 
-# ── Engine ──────────────────────────────────────────────────────────────
+# ── Engine (Active) ─────────────────────────────────────────────────────
 
 
 class WorkflowEngine:
@@ -89,11 +97,23 @@ class WorkflowEngine:
         self.workflow = workflow
         self.session_id = session_id
         self.step_map: dict[str, WorkflowStep] = {s.id: s for s in workflow.steps}
+        self._on_approval_gate: callable | None = None
+        self._on_step_ready: callable | None = None
+        self._on_escalate: callable | None = None
+
+    def on_approval_gate(self, handler: callable) -> None:
+        self._on_approval_gate = handler
+
+    def on_step_ready(self, handler: callable) -> None:
+        self._on_step_ready = handler
+
+    def on_escalate(self, handler: callable) -> None:
+        self._on_escalate = handler
 
     def ready_steps(self) -> list[WorkflowStep]:
         deps_met = []
         for step in self.workflow.steps:
-            if step.status != "pending":
+            if step.status not in ("pending", "failed"):
                 continue
             if all(
                 self.step_map.get(dep, WorkflowStep(id=dep, status="done")).status == "done"
@@ -105,6 +125,34 @@ class WorkflowEngine:
     def all_done(self) -> bool:
         return all(s.status == "done" for s in self.workflow.steps)
 
+    def mark_step(self, step_id: str, status: str, error: str | None = None) -> None:
+        step = self.step_map.get(step_id)
+        if step:
+            step.status = status
+            step.error = error
+
+    def mark_loop_iteration(self, step_id: str) -> str | None:
+        step = self.step_map.get(step_id)
+        if not step:
+            return None
+        step.retry_count += 1
+        if step.retry_count >= step.max_retries:
+            step.status = "escalated"
+            if self._on_escalate:
+                self._on_escalate(step)
+            return "escalate"
+        step.status = "pending"
+        return "retry"
+
+    async def execute_ready_steps(self):
+        for step in self.ready_steps():
+            if step.approval_gate:
+                if self._on_approval_gate:
+                    await self._on_approval_gate(step)
+                continue  # wait for external approval
+            if self._on_step_ready:
+                await self._on_step_ready(step)
+
     def summary(self) -> dict[str, Any]:
         by_status: dict[str, int] = {}
         for s in self.workflow.steps:
@@ -114,4 +162,5 @@ class WorkflowEngine:
             "total_steps": len(self.workflow.steps),
             "by_status": by_status,
             "done": self.all_done(),
+            "session_id": self.session_id,
         }

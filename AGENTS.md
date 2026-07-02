@@ -5,17 +5,55 @@ Build served by FastAPI from `dashboard/frontend/dist/` via catch-all SPA handle
 
 ## Development workflow
 
-See `specs/workflow.md` for the full pipeline (Issue → Plan → Dev → CTO Review → Human Approval → CTO Merge → QA → Close).
+See `specs/workflow.md` for the full pipeline and `specs/workflow.yaml` for the machine-readable definition.
+
+```
+Issue → Plan (CTO) → Dev (branch + PR)
+→ Tech Lead Code Review (mandatory gate)
+→ CTO approves → CTO merges to dev
+→ QA → [Pass → CTO PR to main | Fail → loop]
+→ Close
+```
+
+## Workflow Protocol (Non-negotiable)
+
+The development pipeline is defined in **machine-readable YAML** (`specs/workflow.yaml`) with a JSON Schema (`specs/workflow.schema.json`). Every agent MUST:
+
+1. Load `specs/workflow.yaml` at session start
+2. Follow the defined stages in order
+3. Verify preconditions before proceeding to a stage
+4. Verify postconditions before marking a stage complete
+5. Use the defined handoff protocol (`specs/protocol.md`) for agent-to-agent communication
+6. Run `bash scripts/validate-workflow.sh` before pushing any code
+
+Enforcement mechanisms:
+- **Pre-push hook** (`.githooks/pre-push`): runs validation on every push. Install: `git config core.hooksPath .githooks`
+- **PR template** (`.github/PULL_REQUEST_TEMPLATE.md`): mandatory checklist in every PR
 
 ## Agent roles
 
-| Role | File | Scope |
-|------|------|-------|
-| CTO | `specs/roles/cto.md` | Architecture, standards, code review, merge (with human approval) |
-| Full Stack Developer | `specs/roles/fullstack-developer.md` | Feature/bug implementation |
-| QA/Tester | `specs/roles/qa-tester.md` | Validation against test plan |
-| Tech Lead | `specs/roles/tech-lead.md` | Optional — PR triage, debt audit |
-| UX/UI Designer | `specs/roles/ux-ui-designer.md` | Advisory — design review |
+| Role | File | Scope | Gate |
+|------|------|-------|------|
+| CTO | `specs/roles/cto.md` | Architecture, launch agents, verify workflows, approve PRs, sole PR-to-main authority | Mandatory |
+| Tech Lead | `specs/roles/tech-lead.md` | Automated Code Review (mandatory gate), Security/UI-UX triage, delegation to Dev | Mandatory |
+| Full Stack Developer | `specs/roles/fullstack-developer.md` | Feature/bug implementation | Mandatory |
+| QA/Tester | `specs/roles/qa-tester.md` | Validation against test plan, QA loop with escalation | Mandatory |
+| Security Specialist | `specs/roles/security-specialist.md` | Pentesting, black box, SAST/DAST → creates Issue | On demand |
+| UI/UX Specialist | `specs/roles/ui-ux-specialist.md` | Design/UX review, accessibility audit → creates Issue | On demand |
+| Advisory | — (see CTO) | Deep architecture review on CTO request (loop exhaustion, complex design) | On demand (CTO-activated) |
+
+### Hierarchy
+
+```
+CTO ── launches agents, verifies workflows, approves PRs, sole PR-to-main authority
+ ├── Tech Lead ── Code Review (gate), Security/UI-UX triage, delegate to Dev
+ ├── Full Stack Developer ── implementation
+ ├── QA/Tester ── validation, QA loop
+ ├── Security Specialist ── pentesting → Issue
+ └── UI/UX Specialist ── design/UX review → Issue
+      ↑
+ Advisory ── deep review on CTO request
+```
 
 ## Sandbox isolation
 
