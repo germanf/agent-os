@@ -27,6 +27,7 @@ from dashboard.routes.jobs import router as jobs_router
 from dashboard.routes.kanban import router as kanban_router
 from dashboard.routes.notes import router as notes_router
 from dashboard.routes.projects import router as projects_router
+from dashboard.routes.workflows import router as workflows_router
 
 app = FastAPI(title="Agentic Software Boutique")
 app.state.limiter = limiter
@@ -47,6 +48,7 @@ app.include_router(diagnostics_router)
 app.include_router(approvals_router)
 app.include_router(hermes_webhook_router)
 app.include_router(cron_router)
+app.include_router(workflows_router)
 
 
 @app.on_event("startup")
