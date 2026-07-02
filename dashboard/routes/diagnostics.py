@@ -45,6 +45,11 @@ async def health(request: Request):
     })
 
 
+@router.get("/health/history")
+async def health_history(request: Request, limit: int = 50):
+    return JSONResponse(registry.history(limit=limit))
+
+
 @router.get("/diagnostics")
 @limiter.limit("10/minute")
 async def diagnostics(request: Request):

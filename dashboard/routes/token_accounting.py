@@ -1,3 +1,5 @@
+import time
+
 from fastapi import APIRouter, HTTPException, Request
 
 from dashboard.rate_limit import limiter
@@ -40,6 +42,7 @@ async def log_usage(request: Request):
 
 @router.get("/summary")
 @limiter.limit("30/minute")
-async def usage_summary(request: Request, project_id: int | None = None):
-    rows = await _accountant.summary(project_id=project_id)
+async def usage_summary(request: Request, project_id: int | None = None, since_hours: int | None = None):
+    since = (time.time() - since_hours * 3600) if since_hours else None
+    rows = await _accountant.summary(project_id=project_id, since=since)
     return rows

@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { SkeletonCard } from "../components/Skeleton";
+import TokenChart from "../components/TokenChart";
+import JobTimeline from "../components/JobTimeline";
+import HealthChart from "../components/HealthChart";
 
 interface JobSummary {
   id: string;
@@ -35,6 +38,13 @@ export default function Dashboard() {
         <HealthWidget health={health} />
         <StatusWidget />
         <QuickActions />
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <TokenChart />
+        <JobTimeline />
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <HealthChart />
       </div>
       <RecentJobs jobs={jobs} />
     </div>
