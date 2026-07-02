@@ -1,3 +1,4 @@
+import os
 import sys
 from pathlib import Path
 
@@ -19,12 +20,14 @@ def configure_logging() -> None:
         ),
         level="DEBUG",
     )
+    serialize = os.environ.get("LOG_JSON", "").lower() in ("1", "true", "yes")
     _base_logger.add(
         LOG_DIR / "dashboard_{time:YYYY-MM-DD}.log",
         format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level: <8} | {name}:{line} | {message}",
         level="INFO",
-        rotation="1 day",
+        rotation="100 MB",
         retention="30 days",
+        serialize=serialize,
     )
 
 
