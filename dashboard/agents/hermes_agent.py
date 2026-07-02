@@ -6,10 +6,14 @@ from dashboard.agents.protocol import (
     AgentResult,
     OrchestratorCapability,
 )
+from dashboard.headroom_memory import HeadroomSessionMemory
 from dashboard.hermes_adapter import is_available
 
 
 class HermesAgent(OrchestratorCapability):
+    def __init__(self) -> None:
+        self._memory = HeadroomSessionMemory()
+
     @property
     def description(self) -> str:
         return "Hermes-powered orchestrator — decompose, delegate, track"
