@@ -27,7 +27,9 @@ from dashboard.routes.jobs import router as jobs_router
 from dashboard.routes.kanban import router as kanban_router
 from dashboard.routes.notes import router as notes_router
 from dashboard.routes.projects import router as projects_router
+from dashboard.routes.token_accounting import router as token_accounting_router
 from dashboard.routes.workflows import router as workflows_router
+from dashboard.token_accounting import init_token_accounting
 
 app = FastAPI(title="Agentic Software Boutique")
 app.state.limiter = limiter
@@ -49,6 +51,7 @@ app.include_router(approvals_router)
 app.include_router(hermes_webhook_router)
 app.include_router(cron_router)
 app.include_router(workflows_router)
+app.include_router(token_accounting_router)
 
 
 @app.on_event("startup")
@@ -57,6 +60,7 @@ async def startup():
     await start_headroom()
     await chat_store.init_db()
     await init_kanban()
+    await init_token_accounting()
     await init_approvals()
     await init_checkpoints()
     start_kanban_feedback()
