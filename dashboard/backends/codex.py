@@ -1,8 +1,10 @@
-"""GPT Codex backend stub — https://github.com/openai/codex"""
+"""GPT Codex backend — https://github.com/openai/codex"""
 
 from __future__ import annotations
 
-from .protocol import ChatBackend, NormalizedEvent
+import json
+
+from .protocol import ChatBackend, Done, NormalizedEvent, TextDelta
 
 
 class CodexBackend(ChatBackend):
@@ -25,7 +27,28 @@ class CodexBackend(ChatBackend):
         context_dirs: list[str] | None = None,
         mcp_manifest: str | None = None,
     ) -> list[str]:
-        raise NotImplementedError("Codex backend is not yet implemented")
+        cmd = ["codex", "-p", message, "--output-format", "json"]
+
+        cmd += ["--session-id", session_id] if first else ["--resume", session_id]
+
+        if mcp_manifest:
+            cmd += ["--instructions", mcp_manifest]
+
+        for d in (context_dirs or []):
+            cmd += ["--add-dir", d]
+
+        return cmd
 
     def parse_line(self, raw_line: str) -> NormalizedEvent | None:
-        return None  # RawLine fallback — text-only display
+        if not raw_line or raw_line.isspace():
+            return None
+        try:
+            evt = json.loads(raw_line)
+        except (json.JSONDecodeError, TypeError):
+            return TextDelta(content=raw_line)
+
+        if evt.get("type") == "text":
+            return TextDelta(content=evt.get("content", ""))
+        if evt.get("type") == "result":
+            return Done()
+        return None
