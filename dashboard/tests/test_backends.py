@@ -5,7 +5,7 @@ import sys
 
 from dashboard.backends.codex import CodexBackend
 from dashboard.backends.kimi import KimiBackend
-from dashboard.backends.protocol import TextDelta, Done
+from dashboard.backends.protocol import Done, TextDelta
 
 
 def test_backend(backend, name: str) -> list[str]:
