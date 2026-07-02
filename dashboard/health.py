@@ -1,3 +1,5 @@
+import time
+from collections import deque
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
@@ -15,9 +17,17 @@ class HealthComponent:
     last_failure: datetime | None = None
 
 
+@dataclass
+class HealthSnapshot:
+    timestamp: float
+    overall: str
+    components: list[dict]
+
+
 class HealthRegistry:
     def __init__(self):
         self._checks: dict[str, Callable[[], HealthComponent]] = {}
+        self._history: deque[HealthSnapshot] = deque(maxlen=200)
 
     def register(self, name: str, check: Callable[[], HealthComponent]) -> None:
         self._checks[name] = check
@@ -36,6 +46,17 @@ class HealthRegistry:
                     latency_ms=0,
                     details={"error": str(e)},
                 ))
+        overall = "healthy"
+        for c in results:
+            if c.status == "unavailable":
+                overall = "unavailable"
+            elif c.status == "degraded" and overall == "healthy":
+                overall = "degraded"
+        self._history.append(HealthSnapshot(
+            timestamp=time.time(),
+            overall=overall,
+            components=[c.__dict__ for c in results],
+        ))
         return results
 
     async def run(self, name: str) -> HealthComponent | None:
@@ -54,6 +75,9 @@ class HealthRegistry:
 
     def list_checks(self) -> list[str]:
         return list(self._checks.keys())
+
+    def history(self, limit: int = 100) -> list[dict]:
+        return [s.__dict__ for s in list(self._history)[-limit:]]
 
 
 registry = HealthRegistry()

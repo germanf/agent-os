@@ -90,9 +90,16 @@ class TokenAccountant:
             rows = await cur.fetchall()
             return [dict(r) for r in rows]
 
-    async def summary(self, project_id: int | None = None) -> list[dict]:
-        where = "WHERE project_id=?" if project_id else ""
-        params: list = [project_id] if project_id else []
+    async def summary(self, project_id: int | None = None, since: float | None = None) -> list[dict]:
+        conditions: list[str] = []
+        params: list = []
+        if project_id is not None:
+            conditions.append("project_id=?")
+            params.append(project_id)
+        if since is not None:
+            conditions.append("created_at>=?")
+            params.append(since)
+        where = "WHERE " + " AND ".join(conditions) if conditions else ""
         async with aiosqlite.connect(str(self.db_path)) as conn:
             conn.row_factory = aiosqlite.Row
             cur = await conn.execute(
