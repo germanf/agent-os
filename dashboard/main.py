@@ -9,6 +9,7 @@ from dashboard.approvals import init_approvals
 from dashboard.checkpoints import CheckpointStore, init_checkpoints
 from dashboard.config import FRONTEND_DIST
 from dashboard.cron_loop import start as start_cron_loop
+from dashboard.headroom_learn import start as start_headroom_learn
 from dashboard.headroom_sidecar import start as start_headroom
 from dashboard.hermes_adapter import init_kanban
 from dashboard.kanban_feedback import start as start_kanban_feedback
@@ -69,6 +70,7 @@ async def startup():
     await init_memory()
     start_kanban_feedback()
     start_cron_loop()
+    start_headroom_learn()
     store = CheckpointStore()
     orphaned = await store.mark_orphans()
     if orphaned:
