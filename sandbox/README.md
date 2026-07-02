@@ -28,6 +28,10 @@ sandbox/
 │   ├── pick-port.sh            # Find available port in role range
 │   ├── sandbox-up.sh           # Start container + CI checks
 │   ├── sandbox-down.sh         # Stop container + cleanup
+│   ├── sandbox-cleanup.sh      # Post-PR-merge cleanup (PR-gated)
+│   ├── sandbox-cleanup-all.sh  # Global cleanup of all sandboxes
+│   ├── sandbox-test.sh         # Single agent validation
+│   ├── parallel-test.sh        # Multi-agent parallel validation
 │   ├── ci-checks.sh            # Validation checks (TypeScript, Python)
 │   └── entrypoint.sh           # uvicorn startup script
 │
@@ -106,6 +110,27 @@ docker logs -f claude-sandbox-agent-001  # Follow logs
 ```bash
 ./sandbox/scripts/sandbox-down.sh agent-001
 ```
+
+## `tmp/` Directory (Project Root)
+
+The gitignored `tmp/` directory at project root stores ephemeral runtime data:
+test outputs, logs, generated artifacts that do not need to persist.
+
+**Compose files are NOT stored in `tmp/`** — they live in `sandbox/` because
+they are referenced by name across multiple scripts and roles.
+
+## Cleanup Lifecycle
+
+After tests pass and the PR is merged to `dev`, run `sandbox-cleanup.sh` to tear down:
+
+```bash
+sandbox-cleanup.sh <AGENT_ID> [PR_NUMBER]
+```
+
+- With `PR_NUMBER`: verifies the PR is merged to `dev` before cleaning up
+- Without `PR_NUMBER`: cleans up immediately
+
+See `specs/sandbox.md` for the full lifecycle specification.
 
 ## Usage Details
 

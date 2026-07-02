@@ -94,3 +94,31 @@ class QACapability(AgentCapability):
     @abstractmethod
     async def run_validation(self, checks: list[str], context: AgentContext) -> AgentResult:
         ...
+
+
+class OrchestratorCapability(AgentCapability):
+    """Decompose high-level goals into tasks, delegate, and track execution."""
+
+    @property
+    def name(self) -> str:
+        return "orchestrator"
+
+    @property
+    def description(self) -> str:
+        return "Task decomposition, delegation, and workflow execution"
+
+    @abstractmethod
+    async def decompose(
+        self, goal: str, context: AgentContext
+    ) -> AgentResult:
+        """Break a high-level goal into a list of executable tasks."""
+
+    @abstractmethod
+    async def delegate(
+        self, task_id: str, agent_name: str, context: AgentContext
+    ) -> AgentResult:
+        """Assign a kanban task to a named agent for execution."""
+
+    @abstractmethod
+    async def status(self, workflow_id: str) -> AgentResult:
+        """Return the current status of all tasks in a workflow."""

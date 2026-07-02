@@ -5,28 +5,47 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
 from dashboard import chat_store
+from dashboard.alerts import alerts
 from dashboard.approvals import init_approvals
+from dashboard.backup import start as start_backup_loop
 from dashboard.checkpoints import CheckpointStore, init_checkpoints
 from dashboard.config import FRONTEND_DIST
 from dashboard.cron_loop import start as start_cron_loop
+from dashboard.curator_loop import start as start_curator_loop
+from dashboard.headroom_learn import start as start_headroom_learn
 from dashboard.headroom_sidecar import start as start_headroom
-from dashboard.hermes_adapter import init_kanban
+from dashboard.health import registry
+from dashboard.hermes_adapter import init_kanban, install_platform_skills
 from dashboard.kanban_feedback import start as start_kanban_feedback
 from dashboard.log import configure_logging
+from dashboard.mcp.server import registry as mcp_registry
+from dashboard.mcp.servers.kanban import KanbanMCPServer
+from dashboard.mcp.servers.memory import MemoryMCPServer
+from dashboard.mcp.servers.notes import NotesMCPServer
+from dashboard.mcp.servers.workflows import WorkflowsMCPServer
+from dashboard.memory import init_memory
 from dashboard.middleware.auth import AuthMiddleware
 from dashboard.middleware.hsts import HSTSHeaderMiddleware
 from dashboard.rate_limit import limiter
 from dashboard.routes.agents import router as agents_router
+from dashboard.routes.alerts import router as alerts_router
 from dashboard.routes.approvals import router as approvals_router
 from dashboard.routes.backends import router as backends_router
 from dashboard.routes.chats import router as chats_router
 from dashboard.routes.cron import router as cron_router
+from dashboard.routes.diagnostics import register_health_checks
 from dashboard.routes.diagnostics import router as diagnostics_router
 from dashboard.routes.hermes_webhook import router as hermes_webhook_router
 from dashboard.routes.jobs import router as jobs_router
 from dashboard.routes.kanban import router as kanban_router
+from dashboard.routes.mcp import router as mcp_router
 from dashboard.routes.notes import router as notes_router
+from dashboard.routes.orchestrator import router as orchestrator_router
 from dashboard.routes.projects import router as projects_router
+from dashboard.routes.token_accounting import router as token_accounting_router
+from dashboard.routes.workflows import router as workflows_router
+from dashboard.token_accounting import init_token_accounting
+from dashboard.tracing import TracingMiddleware
 
 app = FastAPI(title="Agentic Software Boutique")
 app.state.limiter = limiter
@@ -35,6 +54,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(AuthMiddleware)
 app.add_middleware(HSTSHeaderMiddleware)
+app.add_middleware(TracingMiddleware)
 
 app.include_router(agents_router)
 app.include_router(jobs_router)
@@ -44,9 +64,14 @@ app.include_router(notes_router)
 app.include_router(projects_router)
 app.include_router(chats_router)
 app.include_router(diagnostics_router)
+app.include_router(alerts_router)
+app.include_router(orchestrator_router)
+app.include_router(mcp_router)
 app.include_router(approvals_router)
 app.include_router(hermes_webhook_router)
 app.include_router(cron_router)
+app.include_router(workflows_router)
+app.include_router(token_accounting_router)
 
 
 @app.on_event("startup")
@@ -55,10 +80,30 @@ async def startup():
     await start_headroom()
     await chat_store.init_db()
     await init_kanban()
+    install_platform_skills()
+    await init_token_accounting()
     await init_approvals()
     await init_checkpoints()
+    await init_memory()
+    mcp_registry.register(MemoryMCPServer())
+    mcp_registry.register(NotesMCPServer())
+    mcp_registry.register(KanbanMCPServer())
+    mcp_registry.register(WorkflowsMCPServer())
+    register_health_checks()
+    health_results = await registry.run_all()
+    for hc in health_results:
+        if hc.status != "healthy":
+            alerts.emit(
+                component=hc.name,
+                severity="critical" if hc.status == "unavailable" else "warning",
+                message=f"Health check failed on startup: {hc.name} is {hc.status}",
+                details=hc.details,
+            )
     start_kanban_feedback()
     start_cron_loop()
+    start_headroom_learn()
+    start_curator_loop()
+    start_backup_loop()
     store = CheckpointStore()
     orphaned = await store.mark_orphans()
     if orphaned:
