@@ -8,6 +8,7 @@ from loguru import logger
 
 from .claude import ClaudeBackend
 from .codex import CodexBackend
+from .http import HttpChatBackend
 from .kimi import KimiBackend
 from .opencode import OpencodeBackend
 from .protocol import ChatBackend
@@ -61,5 +62,6 @@ def list_all_registered() -> list[str]:
 
 register(ClaudeBackend())
 register(OpencodeBackend())
+register(HttpChatBackend())
 register(CodexBackend())
 register(KimiBackend())
