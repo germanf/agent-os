@@ -26,7 +26,7 @@ def _build_note_tree(path, prefix=""):
 @router.get("/notes/tree")
 @limiter.limit("30/minute")
 async def notes_tree(request: Request):
-    if not VAULT_DIR.exists():
+    if VAULT_DIR is None or not VAULT_DIR.exists():
         return []
     return _build_note_tree(VAULT_DIR)
 
@@ -34,7 +34,7 @@ async def notes_tree(request: Request):
 @router.get("/notes/content")
 @limiter.limit("30/minute")
 async def note_content(request: Request, path: str = ""):
-    if not VAULT_DIR.exists():
+    if VAULT_DIR is None or not VAULT_DIR.exists():
         raise HTTPException(status_code=404, detail="Vault not found")
     full_path = VAULT_DIR / path
     if not full_path.exists() or not full_path.is_file():
