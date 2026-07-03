@@ -1,7 +1,8 @@
 import time
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Request
 
+from dashboard.models.schemas import TokenLogRequest
 from dashboard.rate_limit import limiter
 from dashboard.token_accounting import TokenAccountant
 
@@ -24,18 +25,14 @@ async def list_usage(
 
 @router.post("")
 @limiter.limit("30/minute")
-async def log_usage(request: Request):
-    body = await request.json()
-    session_id = body.get("session_id", "")
-    if not session_id:
-        raise HTTPException(400, "session_id is required")
+async def log_usage(request: Request, body: TokenLogRequest):
     result = await _accountant.log_usage(
-        session_id=session_id,
-        prompt_tokens=body.get("prompt_tokens", 0),
-        completion_tokens=body.get("completion_tokens", 0),
-        project_id=body.get("project_id"),
-        agent_name=body.get("agent_name", "unknown"),
-        model=body.get("model", "unknown"),
+        session_id=body.session_id,
+        prompt_tokens=body.prompt_tokens,
+        completion_tokens=body.completion_tokens,
+        project_id=body.project_id,
+        agent_name=body.agent_name,
+        model=body.model,
     )
     return result
 
