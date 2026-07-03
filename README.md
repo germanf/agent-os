@@ -7,7 +7,7 @@ A generic, domain-agnostic platform for AI-assisted software development. Web da
 **One command to run:**
 
 ```bash
-curl -fsSL https://opencode.ai/install | bash
+curl -fsSL https://raw.githubusercontent.com/germanf/agent-os/main/install.sh | bash
 ```
 
 Sets up everything — clones repo, creates venv, builds frontend, generates credentials, prints your login URL. No sudo, no system deps.
@@ -38,7 +38,7 @@ A self-hosted control center for AI coding agents. You get:
 ### Option 1: One-liner install (recommended)
 
 ```bash
-curl -fsSL https://opencode.ai/install | bash
+curl -fsSL https://raw.githubusercontent.com/germanf/agent-os/main/install.sh | bash
 ```
 
 Your credentials are printed at the end — open `http://localhost:8765` and log in.
