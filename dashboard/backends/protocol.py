@@ -54,6 +54,7 @@ class ChatBackend(ABC):
         project: dict | None = None,
         file_paths: list[str] | None = None,
         context_dirs: list[str] | None = None,
+        mcp_manifest: str | None = None,
     ) -> list[str]:
         """Build argv for the subprocess.
 
@@ -64,6 +65,7 @@ class ChatBackend(ABC):
             project: Optional project dict with system_prompt and folders.
             file_paths: Optional list of uploaded file paths.
             context_dirs: Optional list of additional directories to include as context.
+            mcp_manifest: Optional MCP tool manifest string to inject into the agent context.
         """
 
     @abstractmethod
@@ -81,6 +83,7 @@ class ChatBackend(ABC):
         project: dict | None = None,
         file_paths: list[str] | None = None,
         context_dirs: list[str] | None = None,
+        mcp_manifest: str | None = None,
     ) -> AsyncIterator[NormalizedEvent]:
         """Stream chat response via HTTP/sdk (optional override).
 

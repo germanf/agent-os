@@ -1,0 +1,21 @@
+services:
+  app:
+    build: .
+    ports:
+      - "${PORT:-8765}:8765"
+    volumes:
+      - agent-os-data:/app/dashboard/data
+    environment:
+      - DASH_USER=${DASH_USER:-admin}
+      - DASH_PASS=${DASH_PASS:-changeme}
+      - VAULT_DIR=/vault
+      - LOG_JSON=${LOG_JSON:-0}
+    healthcheck:
+      test: curl -sf http://localhost:8765/api/health || exit 1
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  agent-os-data:

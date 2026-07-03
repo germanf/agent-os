@@ -36,6 +36,7 @@ class OpencodeBackend(ChatBackend):
         project: dict | None = None,
         file_paths: list[str] | None = None,
         context_dirs: list[str] | None = None,
+        mcp_manifest: str | None = None,
     ) -> list[str]:
         cmd = ["opencode", "run", message, "--format", "json"]
 
@@ -45,8 +46,13 @@ class OpencodeBackend(ChatBackend):
 
         cmd += ["-s", session_id] if first else ["-c", session_id]
 
+        instructions = ""
         if project is not None and project.get("system_prompt"):
-            cmd += ["--instructions", project["system_prompt"]]
+            instructions = project["system_prompt"]
+        if mcp_manifest:
+            instructions = f"{instructions}\n\n{mcp_manifest}" if instructions else mcp_manifest
+        if instructions:
+            cmd += ["--instructions", instructions]
 
         for d in (context_dirs or []):
             cmd += ["--add-dir", d]
@@ -86,16 +92,20 @@ class OpencodeBackend(ChatBackend):
         project: dict | None = None,
         file_paths: list[str] | None = None,
         context_dirs: list[str] | None = None,
+        mcp_manifest: str | None = None,
     ) -> AsyncIterator[NormalizedEvent]:
         if not is_server_available():
             logger.warning("opencode server not available, subprocess fallback required")
             return
 
-        system_prompt = (project or {}).get("system_prompt") if project else None
+        system_prompt = (project or {}).get("system_prompt") if project else ""
+        if mcp_manifest:
+            system_prompt = f"{system_prompt}\n\n{mcp_manifest}" if system_prompt else mcp_manifest
+        system_prompt = system_prompt or "You are a software engineer."
         session = session_id if first else session_id
 
         messages = [
-            {"role": "system", "content": system_prompt or "You are a software engineer."},
+            {"role": "system", "content": system_prompt},
             {"role": "user", "content": message},
         ]
         if file_paths:

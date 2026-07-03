@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 
 from dashboard.alerts import alerts
 from dashboard.config import FRONTEND_DIST
+from dashboard.config import VAULT_DIR as CONFIG_VAULT_DIR
 from dashboard.health import HealthComponent, registry
 from dashboard.hermes_adapter import get_version
 from dashboard.kanban import is_available as kanban_available
@@ -45,6 +46,11 @@ async def health(request: Request):
     })
 
 
+@router.get("/health/history")
+async def health_history(request: Request, limit: int = 50):
+    return JSONResponse(registry.history(limit=limit))
+
+
 @router.get("/diagnostics")
 @limiter.limit("10/minute")
 async def diagnostics(request: Request):
@@ -53,11 +59,8 @@ async def diagnostics(request: Request):
     vault_exists = False
     db_path = os.path.join(os.path.dirname(__file__), "..", "data", "chat.db")
     db_exists = os.path.exists(db_path)
-    try:
-        vault_path = os.environ.get("VAULT_DIR", "/home/ubuntu/vault")
-        vault_exists = os.path.exists(vault_path)
-    except Exception:
-        pass
+    vault_path = str(CONFIG_VAULT_DIR) if CONFIG_VAULT_DIR else "/home/ubuntu/vault"
+    vault_exists = os.path.exists(vault_path)
     return JSONResponse({
         "frontend_built": frontend_built,
         "db_exists": db_exists,

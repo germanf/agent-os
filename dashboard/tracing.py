@@ -44,17 +44,28 @@ class TracingMiddleware(BaseHTTPMiddleware):
         rid = request.headers.get("X-Request-ID", uuid4().hex[:12])
         _request_id.set(rid)
 
-        span = _tracer.start_span(f"{request.method} {request.url.path}") if _tracer else None
-        if span:
-            span.set_attribute("request_id", rid)
-            span.set_attribute("http.method", request.method)
-            span.set_attribute("http.url", str(request.url))
+        span = None
+        if _tracer is not None and hasattr(_tracer, "start_span"):
+            try:
+                span = _tracer.start_span(f"{request.method} {request.url.path}")
+                if span:
+                    span.set_attribute("request_id", rid)
+                    span.set_attribute("http.method", request.method)
+                    span.set_attribute("http.url", str(request.url))
+            except Exception:
+                span = None
 
         try:
             response = await call_next(request)
             if span:
-                span.set_attribute("http.status_code", response.status_code)
+                try:
+                    span.set_attribute("http.status_code", response.status_code)
+                except Exception:
+                    pass
             return response
         finally:
             if span:
-                span.end()
+                try:
+                    span.end()
+                except Exception:
+                    pass

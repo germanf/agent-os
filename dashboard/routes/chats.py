@@ -9,6 +9,7 @@ from dashboard.backends import get as get_backend
 from dashboard.backends.protocol import Done
 from dashboard.config import BASE_DIR, UPLOADS_DIR
 from dashboard.kanban import create_task as create_kanban_task
+from dashboard.mcp.client import format_mcp_manifest
 from dashboard.models.schemas import (
     ChatCreateRequest,
     ChatResponse,
@@ -134,11 +135,14 @@ async def send_message(request: Request, body: ChatSendRequest):
     if backend is None:
         raise HTTPException(status_code=400, detail=f"Backend '{tool_backend}' not available")
 
+    mcp_manifest = await format_mcp_manifest()
+
     try:
         event_stream = backend.stream_chat(
             message=body.message,
             session_id=str(body.chat_id),
             first=user_msg_count <= 1,
+            mcp_manifest=mcp_manifest or None,
         )
         return StreamingResponse(_event_stream(event_stream), media_type="text/event-stream")
     except NotImplementedError:
@@ -148,6 +152,7 @@ async def send_message(request: Request, body: ChatSendRequest):
         message=body.message,
         session_id=str(body.chat_id),
         first=user_msg_count <= 1,
+        mcp_manifest=mcp_manifest or None,
     )
 
     proxy_env = backend.proxy_env()

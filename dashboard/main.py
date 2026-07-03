@@ -76,15 +76,25 @@ app.include_router(token_accounting_router)
 
 @app.on_event("startup")
 async def startup():
+    from loguru import logger as _logger
     configure_logging()
-    await start_headroom()
-    await chat_store.init_db()
-    await init_kanban()
-    install_platform_skills()
-    await init_token_accounting()
-    await init_approvals()
-    await init_checkpoints()
-    await init_memory()
+    for name, coro in [
+        ("headroom", start_headroom()),
+        ("chat_db", chat_store.init_db()),
+        ("kanban", init_kanban()),
+        ("token_accounting", init_token_accounting()),
+        ("approvals", init_approvals()),
+        ("checkpoints", init_checkpoints()),
+        ("memory", init_memory()),
+    ]:
+        try:
+            await coro
+        except Exception as exc:
+            _logger.error("Startup init {} failed: {}", name, exc)
+    try:
+        install_platform_skills()
+    except Exception as exc:
+        _logger.error("Startup install_platform_skills failed: {}", exc)
     mcp_registry.register(MemoryMCPServer())
     mcp_registry.register(NotesMCPServer())
     mcp_registry.register(KanbanMCPServer())
@@ -99,16 +109,24 @@ async def startup():
                 message=f"Health check failed on startup: {hc.name} is {hc.status}",
                 details=hc.details,
             )
-    start_kanban_feedback()
-    start_cron_loop()
-    start_headroom_learn()
-    start_curator_loop()
-    start_backup_loop()
-    store = CheckpointStore()
-    orphaned = await store.mark_orphans()
-    if orphaned:
-        from loguru import logger as _logger
-        _logger.info("Marked {} job checkpoints as orphans on startup", orphaned)
+    for fn, name in [
+        (start_kanban_feedback, "kanban_feedback"),
+        (start_cron_loop, "cron_loop"),
+        (start_headroom_learn, "headroom_learn"),
+        (start_curator_loop, "curator_loop"),
+        (start_backup_loop, "backup_loop"),
+    ]:
+        try:
+            fn()
+        except Exception as exc:
+            _logger.error("Startup {} failed: {}", name, exc)
+    try:
+        store = CheckpointStore()
+        orphaned = await store.mark_orphans()
+        if orphaned:
+            _logger.info("Marked {} job checkpoints as orphans on startup", orphaned)
+    except Exception as exc:
+        _logger.error("Startup mark_orphans failed: {}", exc)
 
 
 if (FRONTEND_DIST / "assets").exists():

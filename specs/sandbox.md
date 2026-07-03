@@ -15,7 +15,9 @@ Agents run in isolated Docker containers with role-based port ranges:
 |------|-----------|----------------------|
 | Full Stack Developer | 8800–8849 | `sandbox-<agent-id>` |
 | QA / Tester | 8850–8899 | `sandbox-<agent-id>` |
-| UX/UI Designer | 8900–8949 | `sandbox-<agent-id>` |
+| Tech Lead / CTO | 8900–8949 | `sandbox-<agent-id>` |
+| Security Specialist | 8950–8979 | `sandbox-<agent-id>` |
+| UI/UX Specialist | 8980–8999 | `sandbox-<agent-id>` |
 
 ### Rules
 
