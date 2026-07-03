@@ -15,6 +15,7 @@ from loguru import logger
 
 from dashboard.chat_store import _connect
 from dashboard.ops_workflows import _WORKFLOW_REGISTRY
+from dashboard.skill_emitter import emit_workflow_skill
 
 _scheduler_task: asyncio.Task | None = None
 _pending_retries: dict[str, asyncio.Task] = {}
@@ -63,6 +64,9 @@ async def _run_and_record(name: str) -> None:
         result = await cfg["func"]()
         await _record_run_complete(run_id, "completed", result)
         logger.info("Workflow '{}' completed", name)
+        skill_path = emit_workflow_skill(name, result)
+        if skill_path:
+            logger.debug("Emitted skill: {}", skill_path)
     except Exception as e:
         logger.error("Workflow '{}' failed: {}", name, e)
         await _record_run_complete(run_id, "failed", {"error": str(e)})
