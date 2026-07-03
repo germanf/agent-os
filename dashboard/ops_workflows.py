@@ -90,10 +90,10 @@ async def chat_prune() -> dict[str, Any]:
 @register("headroom_learn")
 async def headroom_learn() -> dict[str, Any]:
     try:
-        from dashboard.headroom_learn import compute_baseline
-        baseline = await compute_baseline()
-        logger.info("Headroom baseline: {}", baseline)
-        return {"baseline": baseline}
+        from dashboard.headroom_learn import _run_learn
+        await _run_learn()
+        logger.info("Headroom learn cycle finished")
+        return {"status": "ok"}
     except Exception as e:
         logger.warning("Headroom learning skipped: {}", e)
         return {"skipped": str(e)}
