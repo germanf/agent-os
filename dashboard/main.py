@@ -42,10 +42,12 @@ from dashboard.routes.mcp import router as mcp_router
 from dashboard.routes.notes import router as notes_router
 from dashboard.routes.orchestrator import router as orchestrator_router
 from dashboard.routes.projects import router as projects_router
+from dashboard.routes.scheduler import router as scheduler_router
 from dashboard.routes.token_accounting import router as token_accounting_router
 from dashboard.routes.workflows import router as workflows_router
 from dashboard.token_accounting import init_token_accounting
 from dashboard.tracing import TracingMiddleware
+from dashboard.workflow_scheduler import start as start_workflow_scheduler
 
 app = FastAPI(title="Agentic Software Boutique")
 app.state.limiter = limiter
@@ -71,6 +73,7 @@ app.include_router(approvals_router)
 app.include_router(hermes_webhook_router)
 app.include_router(cron_router)
 app.include_router(workflows_router)
+app.include_router(scheduler_router)
 app.include_router(token_accounting_router)
 
 
@@ -115,6 +118,7 @@ async def startup():
         (start_headroom_learn, "headroom_learn"),
         (start_curator_loop, "curator_loop"),
         (start_backup_loop, "backup_loop"),
+        (start_workflow_scheduler, "workflow_scheduler"),
     ]:
         try:
             fn()
