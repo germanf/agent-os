@@ -1,0 +1,17 @@
+__pycache__
+*.pyc
+.env
+.venv
+.git
+.gitignore
+sandbox/
+docs/
+specs/
+scripts/
+tests/
+tmp/
+.DS_Store
+dashboard/frontend/node_modules
+dashboard/data/*.db
+dashboard/data/*.db-wal
+dashboard/data/*.db-shm
