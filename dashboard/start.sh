@@ -112,7 +112,7 @@ if [[ ! -f "$SSL_CERT" || ! -f "$SSL_KEY" ]]; then
   sudo openssl req -x509 -nodes -days 3650 \
     -newkey rsa:2048 \
     -keyout "$SSL_KEY" -out "$SSL_CERT" \
-    -subj "/CN=10.0.0.227" >> "$LOG_FILE" 2>&1 || error "Failed to generate TLS cert"
+    -subj "/CN=${HOSTNAME:-10.0.0.227}" >> "$LOG_FILE" 2>&1 || error "Failed to generate TLS cert"
   log "✓ TLS certificate generated"
 else
   log "✓ TLS certificate already exists"
