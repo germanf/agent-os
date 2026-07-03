@@ -141,9 +141,12 @@ async def get_job_logs(request: Request, job_id: str):
 @router.post("/jobs/{job_id}/cancel")
 @limiter.limit("10/minute")
 async def cancel_job(request: Request, job_id: str):
+    job = runner.get_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
     success = await runner.cancel_job(job_id)
     if not success:
-        raise HTTPException(status_code=409, detail="Job already finished or not found")
+        raise HTTPException(status_code=409, detail="Job already finished")
     return {"status": "cancelled"}
 
 

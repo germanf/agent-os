@@ -10,6 +10,7 @@ class BackendInfo(BaseModel):
     id: str
     name: str
     description: str
+    available: bool = False
 
 
 class ProjectCreateRequest(BaseModel):
@@ -72,6 +73,15 @@ class MessageResponse(BaseModel):
 class ChatSendRequest(BaseModel):
     chat_id: str
     message: str
+
+
+class TokenLogRequest(BaseModel):
+    session_id: str
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    project_id: int | None = None
+    agent_name: str = "unknown"
+    model: str = "unknown"
 
 
 class KanbanCreateRequest(BaseModel):
