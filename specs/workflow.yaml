@@ -76,14 +76,13 @@ stages:
       - Tech Lead has approved the PR
     postconditions:
       - CTO verified: Tech Lead approved, validations pass, PR references issue
-      - Human approved (when required)
+      - CTO approved (self-approval, no human gate for beta+)
 
   - id: merge-to-dev
     description: "CTO merges PR to dev, deletes branch"
     agent: cto
     preconditions:
       - CTO approval complete
-      - Human approval complete (when required)
     postconditions:
       - PR merged to dev
       - branch deleted after merge
@@ -111,7 +110,7 @@ stages:
       - verification comment posted
 
   - id: merge-to-main
-    description: "CTO creates PR to main and merges"
+    description: "CTO creates PR to main and merges (autonomous, no human gate)"
     agent: cto
     preconditions:
       - QA passed
@@ -119,6 +118,7 @@ stages:
     postconditions:
       - PR from dev to main created by CTO
       - merge to main
+      - tag + GitHub Release created
 
 loops:
   security:

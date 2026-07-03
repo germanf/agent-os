@@ -57,6 +57,16 @@ CREATE TABLE IF NOT EXISTS messages (
 
 CREATE INDEX IF NOT EXISTS idx_chats_project ON chats(project_id);
 CREATE INDEX IF NOT EXISTS idx_messages_chat ON messages(chat_id);
+
+CREATE TABLE IF NOT EXISTS workflow_runs (
+    id            TEXT PRIMARY KEY,
+    workflow_name TEXT NOT NULL,
+    status        TEXT NOT NULL DEFAULT 'pending',
+    started_at    REAL,
+    completed_at  REAL,
+    detail_json   TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_wr_workflow ON workflow_runs(workflow_name);
 """
 
 
