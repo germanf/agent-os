@@ -16,7 +16,8 @@ async def list_backends(request: Request):
         BackendInfo(
             id=name,
             name=name.title(),
-            description=f"{name} backend ({'available' if name in available else 'unavailable'})",
+            available=name in available,
+            description=f"{name} backend",
         )
         for name in all_registered
     ]
