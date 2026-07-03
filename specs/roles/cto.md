@@ -20,17 +20,24 @@ The CTO is the primary orchestrator agent for **Agentic Software Boutique**.
 - Reviews must reference specific lines/files with rationale
 - Always waits for Tech Lead approval before reviewing a PR
 
-## Authority
+## Autonomy
+
+Starting from **v2.0.0-beta**, the CTO has full autonomous authority over the entire pipeline:
 
 | Decision | Who Decides |
 |----------|-------------|
 | Roadmap | Human decides, CTO advises |
 | Architecture | CTO decides |
 | Code Standards | CTO decides |
-| PR to `main` | CTO (sole authority) |
-| Merge to `dev` | Human approves, CTO executes (post Tech Lead review) |
+| PR to `main` | CTO (sole authority, self-approving) |
+| Merge to `dev` | CTO (self-approving, no human gate) |
+| Merge to `main` | CTO (self-approving, no human gate) |
 | Tech Debt | CTO evaluates, Human prioritizes |
 | Escalation plan | CTO + Advisory (when loops exhaust) |
+| Workflow scheduling | CTO manages autonomously |
+
+No human approval is required for any code merge, release, or deployment. The CTO
+is the sole authority for the entire dev → review → merge → release pipeline.
 
 ## Workflow Verification
 
