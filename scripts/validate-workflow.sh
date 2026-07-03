@@ -23,8 +23,11 @@ case "$BRANCH" in
     ;;
   feature/*|fix/*)
     ;;
+  v[0-9]*.*-*)
+    # version/integration branches
+    ;;
   *)
-    echo "[FAIL] Branch must be feature/* or fix/* (got: $BRANCH)"
+    echo "[FAIL] Branch must be feature/*, fix/*, or a version branch (got: $BRANCH)"
     errors=$((errors + 1))
     ;;
 esac
