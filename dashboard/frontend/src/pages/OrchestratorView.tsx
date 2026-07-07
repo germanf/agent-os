@@ -43,6 +43,11 @@ export default function OrchestratorView() {
   const [subtaskInput, setSubtaskInput] = useState("");
   const [selectedTask, setSelectedTask] = useState<TaskView | null>(null);
   const [sseStatus, setSseStatus] = useState<string>("");
+  const [mode, setMode] = useState<"simple" | "mapreduce">("simple");
+  const [mrInput, setMrInput] = useState("");
+  const [mrMapDesc, setMrMapDesc] = useState("Analyze the following data");
+  const [mrParallelism, setMrParallelism] = useState(3);
+  const [mrReduceDesc, setMrReduceDesc] = useState("");
   const eventSourceRef = useRef<EventSource | null>(null);
 
   useEffect(() => {
@@ -82,6 +87,23 @@ export default function OrchestratorView() {
     loadTasks();
     setSelectedTask(null);
 
+    if (result?.task_id) {
+      connectSSE(result.task_id);
+    }
+  }
+
+  async function handleMapReduce() {
+    if (!mrInput.trim()) return;
+    const body = {
+      root_task: mrInput.trim(),
+      map_description: mrMapDesc,
+      parallelism: mrParallelism,
+      reduce_description: mrReduceDesc.trim() || undefined,
+    };
+    const result = await postJSON<{ task_id: string }>("/api/orchestrator/map-reduce", body);
+    setMrInput("");
+    loadTasks();
+    setSelectedTask(null);
     if (result?.task_id) {
       connectSSE(result.task_id);
     }
@@ -145,27 +167,78 @@ export default function OrchestratorView() {
 
       <div className="card p-4 space-y-3">
         <h3 className="font-semibold">New Task</h3>
-        <div>
-          <label className="text-xs text-text-muted block mb-1">Root task (auto-decompose)</label>
-          <input
-            className="input w-full"
-            placeholder="e.g. Analyze the codebase and write tests"
-            value={rootTask}
-            onChange={e => setRootTask(e.target.value)}
-          />
+        <div className="flex gap-2 mb-2">
+          <button className={`tab-btn ${mode === "simple" ? "active" : ""}`} onClick={() => setMode("simple")}>Simple</button>
+          <button className={`tab-btn ${mode === "mapreduce" ? "active" : ""}`} onClick={() => setMode("mapreduce")}>Map-Reduce</button>
         </div>
-        <div className="text-center text-xs text-text-muted">— or —</div>
-        <div>
-          <label className="text-xs text-text-muted block mb-1">Subtasks (one per line, format: description || agent_type)</label>
-          <textarea
-            className="input w-full h-24"
-            placeholder="Fix login bug || claude&#10;Write unit tests || opencode"
-            value={subtaskInput}
-            onChange={e => setSubtaskInput(e.target.value)}
-          />
-        </div>
-        <button className="btn-primary" onClick={handleCreate}>
-          Create Task
+
+        {mode === "simple" ? (
+          <>
+            <div>
+              <label className="text-xs text-text-muted block mb-1">Root task (auto-decompose)</label>
+              <input
+                className="input w-full"
+                placeholder="e.g. Analyze the codebase and write tests"
+                value={rootTask}
+                onChange={e => setRootTask(e.target.value)}
+              />
+            </div>
+            <div className="text-center text-xs text-text-muted">— or —</div>
+            <div>
+              <label className="text-xs text-text-muted block mb-1">Subtasks (one per line, format: description || agent_type)</label>
+              <textarea
+                className="input w-full h-24"
+                placeholder="Fix login bug || claude&#10;Write unit tests || opencode"
+                value={subtaskInput}
+                onChange={e => setSubtaskInput(e.target.value)}
+              />
+            </div>
+          </>
+        ) : (
+          <>
+            <div>
+              <label className="text-xs text-text-muted block mb-1">Input data (one item per line)</label>
+              <textarea
+                className="input w-full h-24"
+                placeholder="file1.py&#10;file2.py&#10;file3.py"
+                value={mrInput}
+                onChange={e => setMrInput(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="text-xs text-text-muted block mb-1">Map instruction</label>
+              <input
+                className="input w-full"
+                placeholder="Analyze the following code"
+                value={mrMapDesc}
+                onChange={e => setMrMapDesc(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="text-xs text-text-muted block mb-1">Parallel workers: {mrParallelism}</label>
+              <input
+                type="range"
+                min={1}
+                max={10}
+                className="w-full accent-accent"
+                value={mrParallelism}
+                onChange={e => setMrParallelism(Number(e.target.value))}
+              />
+            </div>
+            <div>
+              <label className="text-xs text-text-muted block mb-1">Reduce instruction (optional)</label>
+              <input
+                className="input w-full"
+                placeholder="Synthesize the results into a final report"
+                value={mrReduceDesc}
+                onChange={e => setMrReduceDesc(e.target.value)}
+              />
+            </div>
+          </>
+        )}
+
+        <button className="btn-primary" onClick={mode === "simple" ? handleCreate : handleMapReduce}>
+          {mode === "simple" ? "Create Task" : "Run Map-Reduce"}
         </button>
       </div>
 

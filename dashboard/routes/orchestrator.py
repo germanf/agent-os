@@ -146,6 +146,38 @@ async def stream_task(request: Request, task_id: str):
     return StreamingResponse(event_stream(), media_type="text/event-stream")
 
 
+@router.post("/map-reduce")
+@limiter.limit("10/minute")
+async def create_map_reduce(request: Request, body: dict):
+    root_task = body.get("root_task", "")
+    map_description = body.get("map_description", "Process the following input")
+    parallelism = min(body.get("parallelism", 3), 10)
+    reduce_description = body.get("reduce_description")
+
+    graph = TaskGraph.create_map_reduce(
+        root_task=root_task,
+        map_description=map_description,
+        parallelism=parallelism,
+        reduce_description=reduce_description,
+    )
+
+    _prune_old()
+    _graphs[graph.id] = graph
+    asyncio.create_task(execute_graph(graph))
+
+    return JSONResponse({
+        "task_id": graph.id,
+        "type": "map-reduce",
+        "parallelism": parallelism,
+        "status": graph.status.value,
+        "subtasks": [
+            {"id": st.id, "description": st.description[:80], "agent_type": st.agent_type,
+             "depends_on": st.depends_on, "status": st.status.value}
+            for st in graph.subtasks
+        ],
+    }, status_code=201)
+
+
 @router.get("/agents")
 @limiter.limit("30/minute")
 async def list_agents(request: Request):
