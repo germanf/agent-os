@@ -91,6 +91,13 @@ def restore(backup_path: str) -> bool:
         return False
 
 
+def last_backup_time() -> float | None:
+    """Return the modification timestamp of the most recent backup, or None."""
+    backup_dir = _get_backup_dir()
+    backups = sorted(backup_dir.glob("chat.db.*.backup"), key=lambda f: f.stat().st_mtime, reverse=True)
+    return backups[0].stat().st_mtime if backups else None
+
+
 def start():
     global _task
     if _task is not None and not _task.done():
