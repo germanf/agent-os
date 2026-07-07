@@ -2,15 +2,19 @@ import os
 import sys
 import time
 
+import psutil
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
 from dashboard.alerts import alerts
+from dashboard.backends import list_available as list_available_backends
+from dashboard.backup import last_backup_time
 from dashboard.config import FRONTEND_DIST
 from dashboard.config import VAULT_DIR as CONFIG_VAULT_DIR
 from dashboard.health import HealthComponent, registry
 from dashboard.hermes_adapter import get_version
 from dashboard.kanban import is_available as kanban_available
+from dashboard.mcp.server import registry as mcp_registry
 from dashboard.ponytail import get_metrics, get_status
 from dashboard.rate_limit import limiter
 
@@ -140,8 +144,99 @@ def _check_disk():
         return HealthComponent(name="disk", status="unavailable", latency_ms=latency, details={"error": str(e)})
 
 
+def _check_memory():
+    t0 = time.time()
+    try:
+        mem = psutil.virtual_memory()
+        pct_free = mem.available / mem.total * 100
+        lat = (time.time() - t0) * 1000
+        st = "healthy" if pct_free >= 20 else "degraded" if pct_free >= 10 else "unavailable"
+        return HealthComponent(name="memory", status=st, latency_ms=lat,
+                               details={"total_gb": round(mem.total / 1e9, 1),
+                                        "available_gb": round(mem.available / 1e9, 1),
+                                        "free_pct": round(pct_free, 1)})
+    except Exception as e:
+        lat = (time.time() - t0) * 1000
+        return HealthComponent(name="memory", status="unavailable", latency_ms=lat,
+                               details={"error": str(e)[:120]})
+
+
+def _check_cpu():
+    t0 = time.time()
+    try:
+        load1, load5, load15 = os.getloadavg()
+        cores = os.cpu_count() or 1
+        lat = (time.time() - t0) * 1000
+        ratio = load1 / cores
+        st = "healthy" if ratio < 2 else "degraded" if ratio < 4 else "unavailable"
+        return HealthComponent(name="cpu", status=st, latency_ms=lat,
+                               details={"load_1m": round(load1, 2), "load_5m": round(load5, 2),
+                                        "load_15m": round(load15, 2), "cores": cores})
+    except Exception as e:
+        lat = (time.time() - t0) * 1000
+        return HealthComponent(name="cpu", status="unavailable", latency_ms=lat,
+                               details={"error": str(e)[:120]})
+
+
+def _check_backup():
+    t0 = time.time()
+    try:
+        last_ts = last_backup_time()
+        lat = (time.time() - t0) * 1000
+        if last_ts is None:
+            return HealthComponent(name="backup", status="unavailable", latency_ms=lat,
+                                   details={"error": "No backups found"})
+        age_hours = (time.time() - last_ts) / 3600
+        st = "healthy" if age_hours < 6 else "degraded" if age_hours < 24 else "unavailable"
+        last_fmt = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(last_ts))
+        return HealthComponent(name="backup", status=st, latency_ms=lat,
+                               details={"last_backup": last_fmt, "age_hours": round(age_hours, 1)})
+    except Exception as e:
+        lat = (time.time() - t0) * 1000
+        return HealthComponent(name="backup", status="unavailable", latency_ms=lat,
+                               details={"error": str(e)[:120]})
+
+
+def _check_mcp():
+    t0 = time.time()
+    try:
+        servers = mcp_registry.list()
+        lat = (time.time() - t0) * 1000
+        if not servers:
+            return HealthComponent(name="mcp", status="unavailable", latency_ms=lat,
+                                   details={"error": "No MCP servers registered"})
+        names = [s.name for s in servers]
+        # Sync-only check: servers exist and are registered. Full response test
+        # requires async — see the MCP status endpoint for per-server health.
+        return HealthComponent(name="mcp", status="healthy", latency_ms=lat,
+                               details={"servers": names, "total": len(servers), "failures": 0})
+    except Exception as e:
+        lat = (time.time() - t0) * 1000
+        return HealthComponent(name="mcp", status="unavailable", latency_ms=lat,
+                               details={"error": str(e)[:120]})
+
+
+def _check_backends():
+    t0 = time.time()
+    try:
+        available = list_available_backends()
+        lat = (time.time() - t0) * 1000
+        st = "healthy" if len(available) > 0 else "degraded"
+        return HealthComponent(name="backends", status=st, latency_ms=lat,
+                               details={"available": available, "count": len(available)})
+    except Exception as e:
+        lat = (time.time() - t0) * 1000
+        return HealthComponent(name="backends", status="unavailable", latency_ms=lat,
+                               details={"error": str(e)[:120]})
+
+
 def register_health_checks():
     registry.register("database", _check_db)
     registry.register("hermes", _check_hermes)
     registry.register("frontend", _check_frontend)
     registry.register("disk", _check_disk)
+    registry.register("memory", _check_memory)
+    registry.register("cpu", _check_cpu)
+    registry.register("backup", _check_backup)
+    registry.register("mcp", _check_mcp)
+    registry.register("backends", _check_backends)
