@@ -96,7 +96,7 @@ class TaskGraph:
         for i, chunk in enumerate(chunks):
             if not chunk:
                 continue
-            desc = f"{map_description}\n\nInput chunk {i+1}/{len(chunks)}:\n" + "\n".join(chunk)
+            desc = f"{map_description}\n\nChunk {len(map_ids) + 1} of {parallelism}:\n" + "\n".join(chunk)
             st = graph.add_subtask(description=desc, agent_type="claude")
             map_ids.append(st.id)
 

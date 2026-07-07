@@ -150,8 +150,13 @@ async def stream_task(request: Request, task_id: str):
 @limiter.limit("10/minute")
 async def create_map_reduce(request: Request, body: dict):
     root_task = body.get("root_task", "")
+    if not root_task.strip():
+        return JSONResponse({"error": "root_task required"}, status_code=400)
     map_description = body.get("map_description", "Process the following input")
-    parallelism = min(body.get("parallelism", 3), 10)
+    raw_par = body.get("parallelism", 3)
+    if not isinstance(raw_par, int) or raw_par < 1 or raw_par > 10:
+        return JSONResponse({"error": "parallelism must be int in [1, 10]"}, status_code=400)
+    parallelism = raw_par
     reduce_description = body.get("reduce_description")
 
     graph = TaskGraph.create_map_reduce(
