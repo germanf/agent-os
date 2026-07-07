@@ -6,6 +6,8 @@ from datetime import datetime
 
 from loguru import logger
 
+from dashboard.config import ALERT_HEALTH_DEGRADED_INTERVAL
+
 
 @dataclass
 class HealthComponent:
@@ -57,6 +59,20 @@ class HealthRegistry:
             overall=overall,
             components=[c.__dict__ for c in results],
         ))
+        # Auto-alert on degraded/unavailable (rate-limited per component)
+        try:
+            from dashboard.alerts import alerts
+            for c in results:
+                if c.status in ("degraded", "unavailable"):
+                    if not alerts.rate_limited(c.name, ALERT_HEALTH_DEGRADED_INTERVAL):
+                        alerts.emit(
+                            component=f"health.{c.name}",
+                            severity="warning" if c.status == "degraded" else "critical",
+                            message=f"Health check {c.name} is {c.status}",
+                            details=c.details,
+                        )
+        except Exception:
+            pass  # alert emission failures should not break health checks
         return results
 
     async def run(self, name: str) -> HealthComponent | None:
