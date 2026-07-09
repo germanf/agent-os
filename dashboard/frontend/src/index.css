@@ -158,9 +158,6 @@
   .alert-err {
     @apply bg-[#3d1f1f] border border-danger text-danger;
   }
-  .alert-warn {
-    @apply bg-[#3d2e0c] border border-warning text-warning;
-  }
 
   .tabs {
     @apply flex gap-1 mb-5 border-b border-border;

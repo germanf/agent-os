@@ -43,16 +43,14 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
-    fetch("/api/alerts?limit=20")
-      .then(r => r.ok ? r.json() : [])
-      .then(a => setAlerts(Array.isArray(a) ? a : []))
-      .catch(() => {});
-    const t = setInterval(() => {
+    const poll = () => {
       fetch("/api/alerts?limit=20")
         .then(r => r.ok ? r.json() : [])
         .then(a => setAlerts(Array.isArray(a) ? a : []))
         .catch(() => {});
-    }, 15000);
+    };
+    poll();
+    const t = setInterval(poll, 15000);
     return () => clearInterval(t);
   }, []);
 
@@ -157,21 +155,27 @@ function ActiveAlerts({ alerts, setAlerts }: { alerts: AlertItem[]; setAlerts: (
   };
 
   const ackOne = async (id: string) => {
-    await fetch(`/api/alerts/${id}/acknowledge`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ by: "ui" }),
-    });
-    setAlerts(alerts.map(a => a.id === id ? { ...a, acknowledged: true, acknowledged_by: "ui" } : a));
+    try {
+      const res = await fetch(`/api/alerts/${id}/acknowledge`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ by: "ui" }),
+      });
+      if (!res.ok) return;
+      setAlerts(alerts.map(a => a.id === id ? { ...a, acknowledged: true, acknowledged_by: "ui" } : a));
+    } catch { /* ignore — next poll will sync */ }
   };
 
   const ackAll = async () => {
-    await fetch("/api/alerts/acknowledge-all", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ by: "ui" }),
-    });
-    setAlerts(alerts.map(a => ({ ...a, acknowledged: true, acknowledged_by: "ui" })));
+    try {
+      const res = await fetch("/api/alerts/acknowledge-all", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ by: "ui" }),
+      });
+      if (!res.ok) return;
+      setAlerts(alerts.map(a => ({ ...a, acknowledged: true, acknowledged_by: "ui" })));
+    } catch { /* ignore — next poll will sync */ }
   };
 
   return (
