@@ -78,3 +78,33 @@ class TaskGraph:
         for st in self.subtasks:
             counts[st.status.value] = counts.get(st.status.value, 0) + 1
         return counts
+
+    @classmethod
+    def create_map_reduce(cls, root_task: str, map_description: str, parallelism: int,
+                           reduce_description: str | None = None) -> "TaskGraph":
+        lines = [ln.strip() for ln in root_task.split("\n") if ln.strip()]
+        if not lines:
+            lines = [root_task]
+
+        graph = cls(root_task=root_task)
+
+        chunks: list[list[str]] = [[] for _ in range(parallelism)]
+        for i, line in enumerate(lines):
+            chunks[i % parallelism].append(line)
+
+        map_ids: list[str] = []
+        for i, chunk in enumerate(chunks):
+            if not chunk:
+                continue
+            desc = f"{map_description}\n\nChunk {len(map_ids) + 1} of {parallelism}:\n" + "\n".join(chunk)
+            st = graph.add_subtask(description=desc, agent_type="claude")
+            map_ids.append(st.id)
+
+        if not map_ids:
+            return graph
+
+        if reduce_description:
+            reduce_desc = f"{reduce_description}\n\nSynthesize results from {len(map_ids)} parallel workers."
+            graph.add_subtask(description=reduce_desc, agent_type="claude", depends_on=map_ids)
+
+        return graph
