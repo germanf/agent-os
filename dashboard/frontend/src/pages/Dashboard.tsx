@@ -12,9 +12,21 @@ interface JobSummary {
   created_at: string;
 }
 
+interface AlertItem {
+  id: string;
+  component: string;
+  severity: string;
+  message: string;
+  details: Record<string, unknown> | null;
+  created_at: string;
+  acknowledged: boolean;
+  acknowledged_by: string | null;
+}
+
 export default function Dashboard() {
   const [health, setHealth] = useState<Record<string, any> | null>(null);
   const [jobs, setJobs] = useState<JobSummary[]>([]);
+  const [alerts, setAlerts] = useState<AlertItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -30,6 +42,20 @@ export default function Dashboard() {
       .finally(() => setLoading(false));
   }, []);
 
+  useEffect(() => {
+    fetch("/api/alerts?limit=20")
+      .then(r => r.ok ? r.json() : [])
+      .then(a => setAlerts(Array.isArray(a) ? a : []))
+      .catch(() => {});
+    const t = setInterval(() => {
+      fetch("/api/alerts?limit=20")
+        .then(r => r.ok ? r.json() : [])
+        .then(a => setAlerts(Array.isArray(a) ? a : []))
+        .catch(() => {});
+    }, 15000);
+    return () => clearInterval(t);
+  }, []);
+
   if (loading) return <><SkeletonCard lines={2} /><SkeletonCard lines={3} /></>;
 
   return (
@@ -39,6 +65,7 @@ export default function Dashboard() {
         <StatusWidget />
         <QuickActions />
       </div>
+      <ActiveAlerts alerts={alerts} setAlerts={setAlerts} />
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <TokenChart />
         <JobTimeline />
@@ -114,6 +141,74 @@ function QuickActions() {
           </Link>
         ))}
       </div>
+    </div>
+  );
+}
+
+function ActiveAlerts({ alerts, setAlerts }: { alerts: AlertItem[]; setAlerts: (a: AlertItem[]) => void }) {
+  const unacked = alerts.filter(a => !a.acknowledged);
+
+  const severityDot = (s: string) => {
+    switch (s) {
+      case "critical": return "bg-danger";
+      case "warning": return "bg-warning";
+      default: return "bg-accent";
+    }
+  };
+
+  const ackOne = async (id: string) => {
+    await fetch(`/api/alerts/${id}/acknowledge`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ by: "ui" }),
+    });
+    setAlerts(alerts.map(a => a.id === id ? { ...a, acknowledged: true, acknowledged_by: "ui" } : a));
+  };
+
+  const ackAll = async () => {
+    await fetch("/api/alerts/acknowledge-all", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ by: "ui" }),
+    });
+    setAlerts(alerts.map(a => ({ ...a, acknowledged: true, acknowledged_by: "ui" })));
+  };
+
+  return (
+    <div className="card">
+      <div className="flex items-center justify-between mb-3">
+        <div className="card-title m-0">Active Alerts</div>
+        {unacked.length > 0 && (
+          <button className="btn-ghost text-xs" onClick={ackAll}>Acknowledge all ({unacked.length})</button>
+        )}
+      </div>
+      {alerts.length === 0 ? (
+        <div className="text-xs text-text-muted italic">No alerts</div>
+      ) : (
+        <div className="space-y-1.5 max-h-60 overflow-y-auto">
+          {alerts.slice(0, 20).map(a => (
+            <div key={a.id} className={`flex items-center justify-between px-3 py-2 rounded-md text-xs ${a.acknowledged ? "opacity-40" : "bg-surface2"}`}>
+              <div className="flex items-center gap-2 min-w-0 flex-1">
+                <span className={`w-2 h-2 rounded-full shrink-0 ${severityDot(a.severity)}`} />
+                <span className="font-medium truncate">{a.component}</span>
+                <span className="text-text-muted truncate">{a.message}</span>
+                <span className="text-text-muted shrink-0">{new Date(a.created_at).toLocaleTimeString()}</span>
+              </div>
+              <div className="flex items-center gap-2 shrink-0 ml-2">
+                {a.severity === "critical" && !a.acknowledged && (
+                  <span className="text-danger font-semibold text-[10px] uppercase">Critical</span>
+                )}
+                {!a.acknowledged && (
+                  <button className="btn-ghost text-[11px] px-2 py-0.5" onClick={() => ackOne(a.id)}>Ack</button>
+                )}
+                {a.acknowledged && (
+                  <span className="text-text-muted text-[10px]">by {a.acknowledged_by}</span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
