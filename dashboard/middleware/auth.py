@@ -8,7 +8,7 @@ from loguru import logger
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
 
-AUTH_EXEMPT_PATHS = {"/api/health"}
+AUTH_EXEMPT_PATHS = {"/api/health", "/metrics"}
 
 
 class AuthMiddleware(BaseHTTPMiddleware):
