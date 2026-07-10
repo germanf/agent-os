@@ -9,3 +9,4 @@ loguru>=0.7.2
 headroom-ai[otel]>=0.28.0
 opentelemetry-sdk>=1.43.0
 opentelemetry-exporter-otlp-proto-http>=1.43.0
+prometheus-client>=0.21.0
