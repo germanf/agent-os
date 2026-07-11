@@ -98,6 +98,29 @@ def last_backup_time() -> float | None:
     return backups[0].stat().st_mtime if backups else None
 
 
+def verify_backup_integrity() -> dict:
+    """Check all existing backup files for corruption. Returns {ok, corrupt, checked, errors}."""
+    backup_dir = _get_backup_dir()
+    backups = sorted(backup_dir.glob("chat.db.*.backup"), key=lambda f: f.stat().st_mtime)
+    corrupt = []
+    for b in backups:
+        try:
+            con = sqlite3.connect(str(b))
+            cursor = con.execute("PRAGMA integrity_check")
+            result = cursor.fetchone()[0]
+            con.close()
+            if result != "ok":
+                corrupt.append(str(b.name))
+        except Exception:
+            corrupt.append(str(b.name))
+    return {
+        "ok": len(corrupt) == 0,
+        "checked": len(backups),
+        "corrupt_count": len(corrupt),
+        "corrupt_files": corrupt if corrupt else None,
+    }
+
+
 def start():
     global _task
     if _task is not None and not _task.done():
