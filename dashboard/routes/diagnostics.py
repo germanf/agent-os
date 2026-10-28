@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse
 
 from dashboard.alerts import alerts
 from dashboard.backends import list_available as list_available_backends
-from dashboard.backup import last_backup_time
+from dashboard.backup import last_backup_time, verify_backup_integrity
 from dashboard.config import FRONTEND_DIST
 from dashboard.config import VAULT_DIR as CONFIG_VAULT_DIR
 from dashboard.health import HealthComponent, registry
@@ -183,14 +183,20 @@ def _check_backup():
     try:
         last_ts = last_backup_time()
         lat = (time.time() - t0) * 1000
+        integrity = verify_backup_integrity()
+        details: dict = {"integrity": integrity}
         if last_ts is None:
             return HealthComponent(name="backup", status="unavailable", latency_ms=lat,
-                                   details={"error": "No backups found"})
+                                   details=details | {"error": "No backups found"})
         age_hours = (time.time() - last_ts) / 3600
         st = "healthy" if age_hours < 6 else "degraded" if age_hours < 24 else "unavailable"
+        if not integrity["ok"]:
+            st = "degraded"
         last_fmt = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(last_ts))
+        details["last_backup"] = last_fmt
+        details["age_hours"] = round(age_hours, 1)
         return HealthComponent(name="backup", status=st, latency_ms=lat,
-                               details={"last_backup": last_fmt, "age_hours": round(age_hours, 1)})
+                               details=details)
     except Exception as e:
         lat = (time.time() - t0) * 1000
         return HealthComponent(name="backup", status="unavailable", latency_ms=lat,
