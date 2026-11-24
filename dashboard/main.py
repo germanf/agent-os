@@ -24,7 +24,7 @@ from dashboard.mcp.servers.memory import MemoryMCPServer
 from dashboard.mcp.servers.notes import NotesMCPServer
 from dashboard.mcp.servers.workflows import WorkflowsMCPServer
 from dashboard.memory import init_memory
-from dashboard.metrics import router as metrics_routerg
+from dashboard.metrics import router as metrics_router
 from dashboard.middleware.auth import AuthMiddleware
 from dashboard.middleware.hsts import HSTSHeaderMiddleware
 from dashboard.rate_limit import limiter
