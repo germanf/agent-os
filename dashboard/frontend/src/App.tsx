@@ -7,6 +7,7 @@ import Notes from "./pages/Notes";
 import Chat from "./pages/Chat";
 import McpAdmin from "./pages/McpAdmin";
 import OrchestratorView from "./pages/OrchestratorView";
+import JobsPage from "./pages/JobsPage";
 
 export default function App() {
   return (
@@ -18,6 +19,7 @@ export default function App() {
           <Route path="notes" element={<Notes />} />
           <Route path="chat" element={<Chat />} />
           <Route path="chat/:chatId" element={<Chat />} />
+          <Route path="jobs" element={<JobsPage />} />
           <Route path="orchestrator" element={<OrchestratorView />} />
           <Route path="mcp" element={<McpAdmin />} />
         </Route>

@@ -30,7 +30,7 @@
     },
     "explore": {
       "mode": "subagent",
-      "model": "nvidia/deepseek-ai/deepseek-v4-flash"
+      "model": "nvidia/minimaxai/minimax-m3"
     },
     "general": {
       "mode": "subagent",

@@ -4,12 +4,17 @@ from fastapi.responses import JSONResponse
 from dashboard.alerts import alerts
 from dashboard.rate_limit import limiter
 
-router = APIRouter(prefix="/api", tags=["alerts"])
+router = APIRouter(prefix="/api/alerts", tags=["alerts"])
 
 
-@router.get("/alerts")
+@router.get("")
 @limiter.limit("30/minute")
-async def list_alerts(request: Request, severity: str | None = None, component: str | None = None, limit: int = 50):
+async def list_alerts(
+    request: Request,
+    severity: str | None = None,
+    component: str | None = None,
+    limit: int = 50,
+):
     return JSONResponse([
         {
             "id": a.id,
@@ -25,16 +30,20 @@ async def list_alerts(request: Request, severity: str | None = None, component: 
     ])
 
 
-@router.post("/alerts/{alert_id}/acknowledge")
+@router.post("/{alert_id}/acknowledge")
 @limiter.limit("30/minute")
-async def acknowledge_alert(request: Request, alert_id: str):
-    if alerts.acknowledge(alert_id):
-        return JSONResponse({"status": "acknowledged"})
-    return JSONResponse({"status": "not_found"}, status_code=404)
+async def acknowledge_alert(request: Request, alert_id: str, body: dict | None = None):
+    by = (body or {}).get("by", "ui")
+    ok = alerts.acknowledge(alert_id, by=by)
+    if not ok:
+        return JSONResponse({"error": "Alert not found"}, status_code=404)
+    return JSONResponse({"status": "acknowledged"})
 
 
-@router.post("/alerts/acknowledge-all")
+@router.post("/acknowledge-all")
 @limiter.limit("10/minute")
-async def acknowledge_all(request: Request, component: str | None = None):
-    count = alerts.acknowledge_all(component=component)
-    return JSONResponse({"status": "acknowledged", "count": count})
+async def acknowledge_all(request: Request, body: dict | None = None):
+    component = (body or {}).get("component")
+    by = (body or {}).get("by", "ui")
+    count = alerts.acknowledge_all(component=component, by=by)
+    return JSONResponse({"acknowledged": count})
